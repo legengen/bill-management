@@ -8,6 +8,27 @@ namespace model {
 
     using Timestamp = std::chrono::system_clock::time_point;
 
+    enum EventStatus {
+        avaliable, frozen
+    };
+
+    // 事项模型，用于保存账单对应的事项
+    struct Event {
+        int id;
+        std::string name;
+        Timestamp createdAt;
+        EventStatus status;
+        Event() = default;
+    };
+
+    // 管理员注解
+    struct Annotation {
+        int id;
+        std::string content;
+        int authorid;
+        Annotation() = default;
+    };
+
     struct User {
         int id = 0;
         std::string phone;
@@ -16,7 +37,8 @@ namespace model {
         std::string role;
         double balance = 0.0;
         Timestamp createdAt;
-        User(const std::string& phone, const std::string& name, const std::string& password): 
+        User() : id(0), phone(""), username(""), password("") {}
+        User(const std::string& phone, const std::string& username, const std::string& password): 
             phone(phone), username(username), password(password){}
     };
 
@@ -27,24 +49,6 @@ namespace model {
         Timestamp issueDate;
         Event event;
         Annotation annotation;
-    };
-    
-    // 事项模型，用于保存账单对应的事项
-    struct Event {
-        int id;
-        std::string name;
-        Timestamp createdAt;
-        EventStatus status;
-    };
-
-    // 管理员注解
-    struct Annotation {
-        int id;
-        std::string content;
-        int authorid;
-    };
-
-    enum EventStatus {
-        avaliable, frozen
+        Bill() = default;
     };
 }
