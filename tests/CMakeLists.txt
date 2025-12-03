@@ -37,5 +37,19 @@ target_link_libraries(user_service_test
       GTest::gmock_main
 )
 
+# BillService 测试
+add_executable(bill_service_test
+    bill_service_test.cc
+)
+
+target_link_libraries(bill_service_test
+    PRIVATE
+      services
+      irepositories
+      models
+      GTest::gtest_main
+      GTest::gmock_main
+)
+
 include(GoogleTest)
 gtest_discover_tests(auth_service_test)
