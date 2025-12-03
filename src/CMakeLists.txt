@@ -11,6 +11,6 @@ target_sources(bill-management
 
 target_link_libraries(bill-management
     PRIVATE
-        AuthService
+        services
 )
 

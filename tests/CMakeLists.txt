@@ -17,7 +17,20 @@ add_executable(auth_service_test
 
 target_link_libraries(auth_service_test
     PRIVATE
-      AuthService
+      services
+      irepositories
+      models
+      GTest::gtest_main
+      GTest::gmock_main
+)
+
+add_executable(user_service_test
+    user_service_test.cc
+)
+
+target_link_libraries(user_service_test
+    PRIVATE
+      services
       irepositories
       models
       GTest::gtest_main

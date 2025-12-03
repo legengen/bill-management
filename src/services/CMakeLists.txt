@@ -1,16 +1,17 @@
-add_library(AuthService)
+add_library(services)
 
-target_sources(AuthService
+target_sources(services
     PRIVATE 
         AuthService.cc
-
+        UserService.cc
     PUBLIC 
         FILE_SET HEADERS
         FILES 
             AuthService.h
+            UserService.h
 )
 
-target_link_libraries(AuthService
+target_link_libraries(services
     PRIVATE
         irepositories
         models
