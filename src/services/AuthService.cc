@@ -24,9 +24,19 @@ std::optional<model::User> AuthService::Register(const std::string& phone, const
 
 bool AuthService::ResetPassword(int userId, const std::string& oldPwd, const std::string& newPwd){
     std::optional<model::User> user = user_repository_->findById(userId);
-    if (user.value().password != oldPwd) {
+    if (!user.has_value()) {
+        return false;
+    }
+
+    auto u = user.value();
+    if (oldPwd.empty() || newPwd.empty()) { 
+        return false; 
+    } else if (u.password != oldPwd) {
+        return false; 
+    } else if (u.password == newPwd) {
         return false;
     }
     user.value().password = newPwd;
+    user_repository_->save(u);
     return true;
 }
