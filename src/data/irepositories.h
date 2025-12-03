@@ -16,6 +16,7 @@ namespace repo {
         virtual std::optional<model::User> findById(int id) = 0; 
 
         virtual std::optional<model::User> queryByPhone(const std::string& phone) = 0; // 仅管理员可用
+        virtual std::vector<model::User> queryByPhonePartial(const std::string& partial) = 0; // 仅管理员可用
 
         virtual bool setBalanceByPhone(const std::string& phone) = 0; // 仅管理员可用
     };
