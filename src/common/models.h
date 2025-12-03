@@ -9,6 +9,7 @@ namespace model {
     using Timestamp = std::chrono::system_clock::time_point;
 
     struct User {
+        int id = 0;
         std::string phone;
         std::string username;
         std::string password;
