@@ -19,11 +19,9 @@ namespace model {
 
     struct Bill {
         int id = 0;
-        std::string title;
         std::string description;
         double amount = 0.0;
         Timestamp issueDate;
-        BillStatus status;
         Event event;
         Annotation annotation;
     };
@@ -32,17 +30,18 @@ namespace model {
     struct Event {
         int id;
         std::string name;
+        Timestamp createdAt;
+        EventStatus status;
     };
 
     // 管理员注解
     struct Annotation {
         int id;
         std::string content;
-        Timestamp createdAt;
         int authorid;
     };
 
-    enum BillStatus {
+    enum EventStatus {
         avaliable, frozen
     };
 }
