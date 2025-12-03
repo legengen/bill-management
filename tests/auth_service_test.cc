@@ -14,6 +14,7 @@ public:
     MOCK_METHOD(void, save, (const model::User& u), (override));
     MOCK_METHOD(std::optional<model::User>, findById, (int id), (override));
     MOCK_METHOD(std::optional<model::User>, queryByPhone, (const std::string& phone), (override));
+    MOCK_METHOD(std::vector<model::User>, queryByPhonePartial, (const std::string& partial), (override));
     MOCK_METHOD(bool, setBalanceByPhone, (const std::string& phone), (override));
 };
 
@@ -44,7 +45,7 @@ TEST_F(AuthServiceTest, Login_Success_WithValidCredentials) {
     expected_user.id = 1;
     expected_user.phone = phone;
     expected_user.username = "testuser";
-    expected_user. password = password; // In real scenario, this should be hashed
+    expected_user. password = password; 
     
     EXPECT_CALL(*mock_repo_, queryByPhone(phone))
         . WillOnce(Return(expected_user));
