@@ -16,7 +16,7 @@ namespace model {
     struct Event {
         int id;
         std::string name;
-        Timestamp createdAt;
+        Timestamp created_at;
         EventStatus status;
         Event() = default;
     };
@@ -36,7 +36,7 @@ namespace model {
         std::string password;
         std::string role;
         double balance = 0.0;
-        Timestamp createdAt;
+        Timestamp created_at;
         User() : id(0), phone(""), username(""), password("") {}
         User(const std::string& phone, const std::string& username, const std::string& password): 
             phone(phone), username(username), password(password){}
@@ -44,11 +44,14 @@ namespace model {
 
     struct Bill {
         int id = 0;
+        int owner_id = 0;
         std::string description;
-        double amount = 0.0;
-        Timestamp issueDate;
+        Timestamp created_at;
         Event event;
         Annotation annotation;
-        Bill() = default;
+        double amount = 0.0;
+        Bill() {
+            created_at = std::chrono::system_clock::now();
+        };
     };
 }
