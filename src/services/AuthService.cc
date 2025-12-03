@@ -14,7 +14,9 @@ std::optional<model::User> AuthService::Register(const std::string& phone, const
         return std::nullopt;
     } else if (phone.empty() || username.empty() || password.empty()) {
         return std::nullopt;
-    } 
+    } else if (phone.length() != 11) {
+        return std::nullopt;
+    }
     model::User u(phone, username, password);
     user_repository_->save(u);
     return u;
