@@ -45,7 +45,7 @@ protected:
         user. password = "password123";
         user.role = role;
         user.balance = balance;
-        user.createdAt = std::chrono::system_clock::now();
+        user.created_at = std::chrono::system_clock::now();
         return user;
     }
 
