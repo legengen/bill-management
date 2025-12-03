@@ -17,8 +17,6 @@ std::optional<model::User> AuthService::Register(const std::string& phone, const
     return u;
 }
 
-
-
 bool AuthService::ResetPassword(int userId, const std::string& oldPwd, const std::string& newPwd){
     std::optional<model::User> user = user_repository_->findById(userId);
     if (user.value().password != oldPwd) {
