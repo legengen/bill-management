@@ -15,6 +15,8 @@ namespace model {
         std::string role;
         double balance = 0.0;
         Timestamp createdAt;
+        User(const std::string& phone, const std::string& name, const std::string& password): 
+            phone(phone), username(username), password(password){}
     };
 
     struct Bill {
