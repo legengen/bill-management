@@ -53,7 +53,7 @@ protected:
         // 创建默认事件
         bill.event.id = 1;
         bill.event.name = "Test Event";
-        bill.event. status = model::EventStatus::avaliable;
+        bill.event. status = model::EventStatus::Available;
         
         return bill;
     }
