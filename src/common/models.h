@@ -3,30 +3,35 @@
 #include <vector>
 #include <chrono>
 
-// 储存了实体模型，用于保存数据库对应的映射
 namespace model {
 
     using Timestamp = std::chrono::system_clock::time_point;
 
     enum EventStatus {
-        avaliable, frozen
+        Available,
+        Frozen
     };
 
-    // 事项模型，用于保存账单对应的事项
     struct Event {
-        int id;
+        int id = 0;
         std::string name;
         Timestamp created_at;
-        EventStatus status;
-        Event() = default;
+        EventStatus status = EventStatus::Available;
+        
+        Event() {
+            created_at = std::chrono::system_clock::now();
+        }
     };
 
-    // 管理员注解
     struct Annotation {
-        int id;
+        int id = 0;
         std::string content;
-        int authorid;
-        Annotation() = default;
+        int authorid = 0;
+        Timestamp created_at;
+        
+        Annotation() {
+            created_at = std::chrono::system_clock::now();
+        }
     };
 
     struct User {
@@ -34,24 +39,34 @@ namespace model {
         std::string phone;
         std::string username;
         std::string password;
-        std::string role;
+        std::string role = "user";
         double balance = 0.0;
         Timestamp created_at;
-        User() : id(0), phone(""), username(""), password("") {}
-        User(const std::string& phone, const std::string& username, const std::string& password): 
-            phone(phone), username(username), password(password){}
+        
+        User() {
+            created_at = std::chrono::system_clock::now();
+        }
+        
+        User(const std::string& phone, const std::string& username, const std::string& password)
+            : phone(phone), username(username), password(password), role("user"), balance(0.0) {
+            created_at = std::chrono::system_clock::now();
+        }
     };
 
     struct Bill {
         int id = 0;
         int owner_id = 0;
+        int event_id = 0; 
         std::string description;
+        double amount = 0.0;
         Timestamp created_at;
+        
         Event event;
         Annotation annotation;
-        double amount = 0.0;
+        bool has_annotation = false;  // 标记是否有注解
+        
         Bill() {
             created_at = std::chrono::system_clock::now();
-        };
+        }
     };
 }
