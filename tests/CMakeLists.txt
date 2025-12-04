@@ -10,46 +10,34 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-# Add test executable
-add_executable(auth_service_test
-  auth_service_test.cc
+set(TEST_TARGETS
+    auth_service_test
+    user_service_test
+    bill_service_test
+    event_service_test
 )
 
-target_link_libraries(auth_service_test
-    PRIVATE
-      services
-      irepositories
-      models
-      GTest::gtest_main
-      GTest::gmock_main
-)
-
-add_executable(user_service_test
-    user_service_test.cc
-)
-
-target_link_libraries(user_service_test
-    PRIVATE
-      services
-      irepositories
-      models
-      GTest::gtest_main
-      GTest::gmock_main
-)
-
-# BillService 测试
-add_executable(bill_service_test
-    bill_service_test.cc
-)
-
-target_link_libraries(bill_service_test
-    PRIVATE
-      services
-      irepositories
-      models
-      GTest::gtest_main
-      GTest::gmock_main
-)
+add_executable(auth_service_test auth_service_test.cc)
+add_executable(user_service_test user_service_test.cc)
+add_executable(bill_service_test bill_service_test.cc)
+add_executable(event_service_test event_service_test.cc)
 
 include(GoogleTest)
-gtest_discover_tests(auth_service_test)
+
+foreach(test_target ${TEST_TARGETS})
+    target_link_libraries(${test_target}
+        PRIVATE
+            services
+            models
+            irepositories
+            GTest::gtest_main
+            GTest::gmock_main
+    )
+    
+    target_include_directories(${test_target}
+        PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+    )
+    
+    gtest_discover_tests(${test_target})
+endforeach()
