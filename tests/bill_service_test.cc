@@ -23,11 +23,19 @@ public:
     MOCK_METHOD(void, remove, (int id), (override));
 };
 
+// Mock AnnotationRepository
+class MockAnnotationRepository : public repo::IAnnotationRepository {
+public:
+    MOCK_METHOD(void, save, (const model::Annotation& a), (override));
+    MOCK_METHOD(std::optional<model::Annotation>, findById, (int id), (override));
+};
+
 class BillServiceTest : public ::testing::Test {
 protected:
     void SetUp() override {
         mock_repo_ = std::make_shared<NiceMock<MockBillRepository>>();
-        bill_service_ = std::make_unique<BillService>(mock_repo_);
+        mock_annotation_repo_ = std::make_shared<NiceMock<MockAnnotationRepository>>();
+        bill_service_ = std::make_unique<BillService>(mock_repo_, mock_annotation_repo_);
         
         // 设置基准时间
         base_time_ = std::chrono::system_clock::now();
@@ -71,6 +79,7 @@ protected:
 
     std::shared_ptr<MockBillRepository> mock_repo_;
     std::unique_ptr<BillService> bill_service_;
+    std::shared_ptr<MockAnnotationRepository> mock_annotation_repo_;
     model::Timestamp base_time_;
 };
 
