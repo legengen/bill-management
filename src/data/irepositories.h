@@ -42,9 +42,9 @@ namespace repo {
         virtual void save(const model::Event& e) = 0; // 仅管理员可用
 
         virtual std::optional<model::Event> findById(int Id) = 0; // 仅管理员可用
-        virtual std::optional<model::Event> findByName(int name) = 0; // 仅管理员可用
+        virtual std::optional<model::Event> findByName(const std::string& name) = 0; // 仅管理员可用
 
-        virtual bool setStatusById(int Id) = 0; // 仅管理员可用
+        virtual bool setStatusById(int id, model::EventStatus status) = 0; // 仅管理员可用
     };
 
     struct IAnnotationRepository {
