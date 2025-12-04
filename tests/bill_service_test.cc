@@ -19,6 +19,8 @@ public:
     MOCK_METHOD(std::vector<model::Bill>, queryByEvent, (std::string& name), (override));
     MOCK_METHOD(std::vector<model::Bill>, queryByTime, (int ownerId, model::Timestamp from, model::Timestamp to), (override));
     MOCK_METHOD(std::vector<model::Bill>, queryByTime, (model::Timestamp from, model::Timestamp to), (override));
+    MOCK_METHOD(std::vector<model::Bill>, queryByTimeInOrder, (model::Timestamp from, model::Timestamp to), (override));
+    MOCK_METHOD(std::vector<model::Bill>, queryByTimeAndEventInOrder, (model::Timestamp from, model::Timestamp to), (override));
     MOCK_METHOD(std::vector<model::Bill>, queryByPhone, (const std::string& phone), (override));
     MOCK_METHOD(void, remove, (int id), (override));
 };
