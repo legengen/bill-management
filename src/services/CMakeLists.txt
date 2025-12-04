@@ -6,6 +6,7 @@ target_sources(services
         UserService.cc
         BillService.cc
         EventService.cc
+        StatisticsService.cc
     PUBLIC 
         FILE_SET HEADERS
         FILES 
@@ -13,6 +14,7 @@ target_sources(services
             UserService.h
             BillService.h
             EventService.h
+            StatisticsService.h
 )
 
 target_link_libraries(services

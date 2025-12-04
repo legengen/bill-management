@@ -5,6 +5,8 @@ project(bill-management CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(SQLite3 REQUIRED)
+
 option(BUILD_TESTS "Build the tests" FALSE)
 
 add_subdirectory(src)
