@@ -76,7 +76,14 @@ void BillService::annotateBill(int bill_id, model::Annotation a) {
     if (!bill.has_value()) {
         return;
     }
+
+    if (a.content.empty() || a.content == "") {
+        return;
+    }
+
+    annotation_repository_->save(a);
     
     bill->annotation = a;
+    bill->has_annotation = true;
     bill_repository_->save(*bill);
 }
