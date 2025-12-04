@@ -25,6 +25,7 @@ namespace model {
 
     struct Annotation {
         int id = 0;
+        int bill_id = 0;
         std::string content;
         int authorid = 0;
         Timestamp created_at;
