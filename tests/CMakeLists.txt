@@ -15,12 +15,14 @@ set(TEST_TARGETS
     user_service_test
     bill_service_test
     event_service_test
+    bill_service_annotate_test
 )
 
 add_executable(auth_service_test auth_service_test.cc)
 add_executable(user_service_test user_service_test.cc)
 add_executable(bill_service_test bill_service_test.cc)
 add_executable(event_service_test event_service_test.cc)
+add_executable(bill_service_annotate_test bill_service_annotate_test.cc)
 
 include(GoogleTest)
 
