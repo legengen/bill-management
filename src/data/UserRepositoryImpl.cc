@@ -5,9 +5,9 @@ using namespace orm;
 void UserRepositoryImpl::save(const model::User& u) {
     if (u.id == 0) {
         db_->GetStorage().insert(u);
-    }
-
-    db_->GetStorage().update(u);
+    } else {
+        db_->GetStorage().update(u);
+    }    
 }
 
 std::optional<model::User> UserRepositoryImpl::findById(int id) {
@@ -23,7 +23,7 @@ std::optional<model::User> UserRepositoryImpl::queryByPhone(const std::string& p
         return std::nullopt;
     }
 
-    return db_->GetStorage().get_optional<model::User>(where(c(&model::User::phone) = phone));
+    return db_->GetStorage().get_optional<model::User>(where(c(&model::User::phone) == phone));
 }
 
 std::vector<model::User> UserRepositoryImpl::queryByPhonePartial(const std::string& partial) {
