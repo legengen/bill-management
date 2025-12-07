@@ -30,7 +30,7 @@ void App::RegisterScreens() {
     
     router.Register(Route::Login, []() { return CreateLoginScreen(); });
     router.Register(Route::Visit, []() { return CreateVisitScreen(); });
-    // router.Register(Route::Register, []() { return CreateRegisterScreen(); });
+    router.Register(Route::Register, []() { return CreateRegisterScreen(); });
     // router.Register(Route::Home, []() { return CreateHomeScreen(); });
     // router.Register(Route::BillList, []() { return CreateBillListScreen(); });
     // router.Register(Route::BillCreate, []() { return CreateBillCreateScreen(); });
