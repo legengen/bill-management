@@ -18,7 +18,7 @@ namespace repo {
         virtual std::optional<model::User> queryByPhone(const std::string& phone) = 0; // 仅管理员可用
         virtual std::vector<model::User> queryByPhonePartial(const std::string& partial) = 0; // 仅管理员可用
 
-        virtual bool setBalanceByPhone(const std::string& phone) = 0; // 仅管理员可用
+        virtual bool setBalanceByPhone(const std::string& phone, double balance) = 0; // 仅管理员可用
     };
 
     struct IBillRepository {
