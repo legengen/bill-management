@@ -39,7 +39,7 @@ void App::RegisterScreens() {
 }
 
 void App::Run() {
-    auto screen = ftxui::ScreenInteractive::Fullscreen();
+    auto screen = ftxui::ScreenInteractive::FitComponent();
     auto& router = Router::Instance();
     
     auto renderer = ftxui::Renderer([&] {
