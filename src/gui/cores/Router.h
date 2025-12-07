@@ -45,5 +45,6 @@ private:
     
     std::map<Route, ScreenFactory> routes_;
     Route current_route_ = Route::Visit;
+    ftxui::Component current_screen_;
     std::function<void(Route)> on_route_change_;
 };
