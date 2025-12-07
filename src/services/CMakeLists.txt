@@ -17,8 +17,10 @@ target_sources(services
             StatisticsService.h
 )
 
+target_include_directories(services PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 target_link_libraries(services
-    PRIVATE
-        irepositories
+    PUBLIC
+        repositories_impl
         models
 )
