@@ -133,3 +133,13 @@ std::vector<model::Bill> BillRepositoryImpl::queryByPhone(const std::string& pho
         where(c(&model::Bill::owner_id) == user_id)
     );
 }
+
+void BillRepositoryImpl::remove(int id) {
+    auto& storage = db_->GetStorage();
+    
+    try {
+        storage.remove<model::Bill>(id);
+    } catch (const std::exception& e) {
+        // 可选：记录日志或忽略
+    }
+}
