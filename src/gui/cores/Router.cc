@@ -2,14 +2,20 @@
 
 void Router::Register(Route route, ScreenFactory factory) {
     routes_[route] = factory;
-
-    if (route == current_route_ && !current_screen_) {
-        current_screen_ = factory();
-    }
 }
 
 void Router::NavigateTo(Route route) {
+    if (route == current_route_) {
+        return;
+    }
+
+    auto it = routes_.find(route);
+    if (it == routes_.end()) {
+        return;
+    }
+
     current_route_ = route;
+    current_screen_ = it->second();
     
     if (on_route_change_) {
         on_route_change_(route);
