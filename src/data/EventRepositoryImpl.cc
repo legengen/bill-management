@@ -48,7 +48,7 @@ std::optional<model::Event> EventRepositoryImpl::findByName(const std::string& n
     }
 }
 
-bool EventRepositoryImpl::setStatusById(int id, model::EventStatus status) {
+bool EventRepositoryImpl::setStatusById(int id, int status) {
     auto& storage = db_->GetStorage();
     
     try {
