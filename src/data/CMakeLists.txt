@@ -7,7 +7,7 @@ target_sources(irepositories
 )
 target_link_libraries(irepositories INTERFACE models)
 
-add_library(repositories_impl INTERFACE)
+add_library(repositories_impl)
 
 target_sources(repositories_impl
     PRIVATE
@@ -28,7 +28,7 @@ target_sources(repositories_impl
 )
 
 target_link_libraries(repositories_impl
-    INTERFACE 
+    PUBLIC 
         irepositories 
         sqlite_orm
         SQLite::SQLite3
