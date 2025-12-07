@@ -1,5 +1,5 @@
 #pragma once
-#include "../data/irepositories.h"
+#include "irepositories.h"
 
 class AuthService {
 public:
