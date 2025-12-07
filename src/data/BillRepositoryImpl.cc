@@ -97,7 +97,7 @@ std::vector<model::Bill> BillRepositoryImpl::queryByTimeInOrder(model::Timestamp
             c(&model::Bill::created_at) >= from &&
             c(&model::Bill::created_at) <= to
         ),
-        order_by(&model::Bill::created_at). asc()
+        order_by(&model::Bill::created_at).asc()
     );
 }
 
@@ -110,8 +110,10 @@ std::vector<model::Bill> BillRepositoryImpl::queryByTimeAndEventInOrder(model::T
             c(&model::Bill::created_at) >= from &&
             c(&model::Bill::created_at) <= to
         ),
-        order_by(&model::Bill::created_at). asc(),
-        order_by(&model::Bill::event_id).asc()
+        multi_order_by(
+            order_by(&model::Bill::created_at).asc(),
+            order_by(&model::Bill::event_id).asc()
+        )
     );
 }
 
