@@ -25,16 +25,16 @@ namespace model {
         ).count();
     }
 
-    enum EventStatus {
-        Available,
-        Frozen
-    };
+    namespace EventStatus {
+        constexpr int Available = 0;
+        constexpr int Frozen = 1;
+    }
 
     struct Event {
         int id = 0;
         std::string name;
         Timestamp created_at;
-        EventStatus status = EventStatus::Available;
+        int status = EventStatus::Available;
         
         Event() {
             created_at = Now();
