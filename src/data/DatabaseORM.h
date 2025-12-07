@@ -1,5 +1,5 @@
 #pragma once
-#include "../common/models.h"
+#include "models.h"
 #include <sqlite_orm/sqlite_orm.h>
 #include <memory>
 
