@@ -39,7 +39,7 @@ std::optional<model::Event> EventService::CreateEvent(model::Event& e) {
     return e;
 }
 
-bool EventService::SetStatus(int event_id, model::EventStatus status){
+bool EventService::SetStatus(int event_id, int status){
     if (event_id <= 0) {
         return false;
     }
