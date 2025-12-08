@@ -11,6 +11,7 @@ enum class Route {
     Login,
     Register,
     Home,
+    ChangePassword,
     BillList,
     BillDetail,
     BillCreate,
