@@ -57,7 +57,7 @@ void App::Run() {
     });
 
     router.SetExitCallback([&]() {
-        screen.ExitLoopClosure();
+        screen.Exit();
     });
     
     screen.Loop(main_container);
