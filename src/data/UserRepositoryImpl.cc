@@ -23,7 +23,8 @@ std::optional<model::User> UserRepositoryImpl::queryByPhone(const std::string& p
         return std::nullopt;
     }
 
-    return db_->GetStorage().get_optional<model::User>(where(c(&model::User::phone) == phone));
+    auto users = db_->GetStorage().get_all_optional<model::User>(where(c(&model::User::phone) == phone));
+    return users.empty() ? std::nullopt : users[0];
 }
 
 std::vector<model::User> UserRepositoryImpl::queryByPhonePartial(const std::string& partial) {
@@ -39,8 +40,11 @@ bool UserRepositoryImpl::setBalanceByPhone(const std::string& phone, double bala
         return false;
     }
 
-    auto user = db_->GetStorage().get<model::User>(where(c(&model::User::phone) == phone));
-    user.balance = balance;
-    db_->GetStorage().update(user);
+    auto users = db_->GetStorage().get_all_optional<model::User>(where(c(&model::User::phone) == phone));
+    if (users.empty()) {
+        return false;
+    }
+    users[0]->balance = balance;
+    db_->GetStorage().update(*users[0]);
     return true;
 }
