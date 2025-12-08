@@ -9,8 +9,7 @@ void BillRepositoryImpl::save(const model::Bill& b) {
     auto& storage = db_->GetStorage();
     
     if (b.id == 0) {
-        model::Bill bill_copy = b;
-        bill_copy.id = storage.insert(bill_copy);
+        storage.insert(b);
     } else {
         storage.update(b);
     }
@@ -18,21 +17,16 @@ void BillRepositoryImpl::save(const model::Bill& b) {
 
 std::optional<model::Bill> BillRepositoryImpl::findById(int id) {
     auto& storage = db_->GetStorage();
-    
-    try {
-        auto bill = storage.get<model::Bill>(id);
-        
-        // 加载关联的 Event
-        try {
-            bill. event = storage.get<model::Event>(bill.event_id);
-        } catch (...) {
-            // Event 不存在，使用默认值
+
+    auto bill = storage.get_optional<model::Bill>(id);
+    if (bill.has_value()) {
+        auto e = storage.get_optional<model::Event>(bill->event_id);
+        if (e.has_value()) {
+            bill->event = *e;
         }
-        
-        return bill;
-    } catch (const std::system_error&) {
-        return std::nullopt;
     }
+    return bill;
+
 }
 
 std::vector<model::Bill> BillRepositoryImpl::queryByEvent(int ownerId, int eventId) {
@@ -43,7 +37,7 @@ std::vector<model::Bill> BillRepositoryImpl::queryByEvent(int ownerId, int event
     );
 }
 
-std::vector<model::Bill> BillRepositoryImpl::queryByEvent(std::string& name) {
+std::vector<model::Bill> BillRepositoryImpl::queryByEvent(const std::string& name) {
     auto& storage = db_->GetStorage();
     
     // 先查找事件
