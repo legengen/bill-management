@@ -4,6 +4,7 @@ project(bill-management CXX)
 # GoogleTest requires at least C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_BUILD_TYPE Debug)
 
 find_package(SQLite3 REQUIRED)
 
