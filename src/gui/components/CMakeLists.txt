@@ -1,13 +1,20 @@
 add_library(components)
 
-target_sources(components
-    PRIVATE 
-        UserInfoBar.cc
-    PUBLIC 
-        FILE_SET HEADERS
-        FILES 
-            UserInfoBar.h
+set(component_lists 
+    UserInfoBar
 )
+foreach(component_name ${component_lists})
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${component_name}.cc)
+        target_sources(components
+        PRIVATE
+            ${component_name}.cc
+        PUBLIC
+            FILE_SET HEADERS
+            FILES
+                ${component_name}.h
+        )
+    endif()
+endforeach()
 
 target_link_libraries(components
     PUBLIC

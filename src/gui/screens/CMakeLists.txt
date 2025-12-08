@@ -1,19 +1,24 @@
 add_library(screens)
 
-target_sources(screens
-    PRIVATE
-        LoginScreen.cc
-        RegisterScreen.cc
-        VisitScreen.cc
-        HomeScreen.cc
-    PUBLIC
-        FILE_SET HEADERS
-        FILES
-            LoginScreen.h
-            RegisterScreen.h
-            VisitScreen.h
-            HomeScreen.h
+set(screen_lists 
+    LoginScreen
+    RegisterScreen
+    VisitScreen
+    HomeScreen
+    #ChangePasswordScreen
 )
+foreach(screen_name ${screen_lists})
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${screen_name}.cc)
+        target_sources(screens
+        PRIVATE
+            ${screen_name}.cc
+        PUBLIC
+            FILE_SET HEADERS
+            FILES
+                ${screen_name}.h
+        )
+    endif()
+endforeach()
 
 target_link_libraries(screens
     PUBLIC
