@@ -43,9 +43,9 @@ ftxui::Component CreateHomeScreen() {
         Router::Instance().NavigateTo(Route::Profile);
     });
     
-    auto user_logout_btn = Button("退出", [] {
+    auto user_logout_btn = Button("登出", [&session] {
         Session::Instance().Logout();
-        Router::Instance().Exit();
+        Router::Instance().NavigateTo(Route::Visit);
     });
     
     // ==================== 组件容器 ====================
