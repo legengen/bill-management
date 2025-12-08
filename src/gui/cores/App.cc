@@ -1,4 +1,5 @@
 #include "App.h"
+#include "Dialog.h"
 #include "LoginScreen.h"
 #include "RegisterScreen.h"
 #include "VisitScreen.h"
@@ -43,14 +44,6 @@ void App::RegisterScreens() {
 void App::Run() {
     auto screen = ftxui::ScreenInteractive::FitComponent();
     auto& router = Router::Instance();
-    
-    auto renderer = ftxui::Renderer([&] {
-        return router.GetCurrentScreen()->Render();
-    });
-
-    auto main_container = CatchEvent(renderer, [&](ftxui::Event e) {
-        return router.GetCurrentScreen()->OnEvent(e);
-    });
 
     router.SetOnRouteChange([&](Route) {
         screen.PostEvent(ftxui::Event::Custom);
@@ -59,6 +52,16 @@ void App::Run() {
     router.SetExitCallback([&]() {
         screen.Exit();
     });
+
+    auto renderer = ftxui::Renderer([&] {
+        return router.GetCurrentScreen()->Render();
+    });
+
+    auto main_with_events = CatchEvent(renderer, [&](ftxui::Event e) {
+        return router.GetCurrentScreen()->OnEvent(e);
+    });
+
+    auto main_component = WithDialog(main_with_events);
     
-    screen.Loop(main_container);
+    screen.Loop(main_component);
 }

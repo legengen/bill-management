@@ -126,7 +126,7 @@ ftxui::Component CreateChangePasswordScreen() {
     });
     
     // 渲染器
-    auto renderer = Renderer(container, [=] {
+    return Renderer(container, [=] {
         // 获取用户手机号
         auto& session = Session::Instance();
         std::string phone = session.GetCurrentUser()->phone;
@@ -206,6 +206,4 @@ ftxui::Component CreateChangePasswordScreen() {
             filler() | size(HEIGHT, EQUAL, 1),
         }) | border;
     });
-
-    return WithDialog(renderer);
 }
