@@ -3,6 +3,7 @@
 #include "RegisterScreen.h"
 #include "VisitScreen.h"
 #include "HomeScreen.h"
+#include "ChangePasswordScreen.h"
 // #include "gui/screens/BillListScreen.h"
 // #include "gui/screens/BillCreateScreen.h"
 // #include "gui/screens/StatisticsScreen.h"
@@ -32,6 +33,7 @@ void App::RegisterScreens() {
     router.Register(Route::Visit, []() { return CreateVisitScreen(); });
     router.Register(Route::Register, []() { return CreateRegisterScreen(); });
     router.Register(Route::Home, []() { return CreateHomeScreen(); });
+    router.Register(Route::ChangePassword, []() { return CreateChangePasswordScreen(); });
     // router.Register(Route::BillList, []() { return CreateBillListScreen(); });
     // router.Register(Route::BillCreate, []() { return CreateBillCreateScreen(); });
     // router.Register(Route::Statistics, []() { return CreateStatisticsScreen(); });
@@ -52,6 +54,10 @@ void App::Run() {
 
     router.SetOnRouteChange([&](Route) {
         screen.PostEvent(ftxui::Event::Custom);
+    });
+
+    router.SetExitCallback([&]() {
+        screen.ExitLoopClosure();
     });
     
     screen.Loop(main_container);
