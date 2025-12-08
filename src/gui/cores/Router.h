@@ -39,6 +39,10 @@ public:
     void SetOnRouteChange(std::function<void(Route)> callback) {
         on_route_change_ = callback;
     }
+
+    void SetExitCallback(std::function<void()> callback) {
+        on_exit_ = callback;
+    }
     
 private:
     Router() = default;
@@ -47,4 +51,6 @@ private:
     Route current_route_ = Route::Visit;
     ftxui::Component current_screen_;
     std::function<void(Route)> on_route_change_;
+    std::function<void()> on_exit_;
+    ftxui::Component current_component_;
 };
