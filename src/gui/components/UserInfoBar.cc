@@ -69,7 +69,9 @@ ftxui::Element RenderUserInfoBar(PageType page_type) {
     // 主信息栏
     auto main_bar = hbox({
         user_info,
+        filler(),
         balance_info,
+        filler(),
         date_info,
     });
     
