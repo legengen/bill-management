@@ -11,3 +11,4 @@ target_link_libraries(gui
 
 add_subdirectory(cores)
 add_subdirectory(screens)
+add_subdirectory(components)
