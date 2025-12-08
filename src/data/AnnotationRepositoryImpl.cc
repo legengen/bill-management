@@ -6,12 +6,9 @@ void AnnotationRepositoryImpl::save(const model::Annotation& a) {
     auto& storage = db_->GetStorage();
     
     if (a.id == 0) {
-        // 插入新注解
-        model::Annotation annotation_copy = a;
-        annotation_copy.id = storage.insert(annotation_copy);
+        storage.insert(a);
     } else {
-        // 更新现有注解
-        storage. update(a);
+        storage.update(a);
     }
 }
 
