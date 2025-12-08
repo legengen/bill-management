@@ -30,8 +30,8 @@ public:
     }
 
     void Register(Route route, ScreenFactory factory);
-
     void NavigateTo(Route route);
+    void Exit();
 
     ftxui::Component GetCurrentScreen();
     Route GetCurrentRoute() const { return current_route_; }
