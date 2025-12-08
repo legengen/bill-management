@@ -36,7 +36,7 @@ bool AuthService::ResetPassword(int userId, const std::string& oldPwd, const std
     } else if (u.password == newPwd) {
         return false;
     }
-    user.value().password = newPwd;
+    u.password = newPwd;
     user_repository_->save(u);
     return true;
 }
