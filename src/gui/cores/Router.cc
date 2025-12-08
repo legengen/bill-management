@@ -33,3 +33,9 @@ ftxui::Component Router::GetCurrentScreen() {
     }
     return current_screen_;
 }
+
+void Router::Exit() {
+    if (on_exit_) {
+        on_exit_();
+    }
+}
