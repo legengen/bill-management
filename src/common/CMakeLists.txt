@@ -1,6 +1,8 @@
 add_library(models INTERFACE)
 
-target_include_directories(models
+target_sources(models 
     INTERFACE 
-        ${CMAKE_CURRENT_SOURCE_DIR}
+    FILE_SET HEADERS
+    FILES
+        models.h
 )

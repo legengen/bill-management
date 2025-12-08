@@ -20,11 +20,5 @@ FetchContent_Declare(ftxui
 )
 FetchContent_MakeAvailable(ftxui)
 
-option(BUILD_TESTS "Build the tests" FALSE)
-
 add_subdirectory(src)
-
-if(BUILD_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
-endif()
+add_subdirectory(tests)
