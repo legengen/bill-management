@@ -54,3 +54,7 @@ bool EventService::SetStatus(int event_id, int status){
     }
     return true;
 }
+
+std::vector<model::Event> EventService::GetAllEvents() {
+    return event_repository_->GetAllEvents();
+}
