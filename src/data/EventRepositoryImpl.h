@@ -10,6 +10,7 @@ public:
     void save(const model::Event& e) override;
     std::optional<model::Event> findById(int id) override;
     std::optional<model::Event> findByName(const std::string& name) override;
+    std::vector<model::Event> GetAllEvents() override;
     bool setStatusById(int id, int status) override;
     
 private:

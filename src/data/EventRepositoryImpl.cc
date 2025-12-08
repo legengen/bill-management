@@ -68,3 +68,9 @@ bool EventRepositoryImpl::setStatusById(int id, int status) {
         return false;
     }
 }
+
+std::vector<model::Event> EventRepositoryImpl::GetAllEvents() {
+    auto& storage = db_->GetStorage();
+    
+    return storage.get_all<model::Event>();
+}
