@@ -21,7 +21,7 @@ ftxui::Component CreateVisitScreen() {
     });
     
     auto quit_btn = Button("退出", [] {
-        // TODO: 发送退出事件或设置退出标志
+        Router::Instance().Exit();
     });
 
     auto buttons = Container::Vertical({
