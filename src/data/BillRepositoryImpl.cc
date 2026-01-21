@@ -139,3 +139,22 @@ void BillRepositoryImpl::remove(int id) {
         // 可选：记录日志或忽略
     }
 }
+
+// ...existing code...
+
+int BillRepositoryImpl::getNextBillId(int owner_id) {
+    auto& storage = db_->GetStorage();
+    
+    // 获取该用户的所有账单，按ID降序排列，取第一个
+    auto bills = storage.get_all<model::Bill>(
+        where(c(&model::Bill::owner_id) == owner_id),
+        order_by(&model::Bill::id).desc(),
+        limit(1)
+    );
+    
+    if (bills.empty()) {
+        return 1;  // 该用户第一笔账单
+    }
+    
+    return bills[0].id + 1;
+}

@@ -12,6 +12,7 @@ public:
     void editBill(int bill_id, model::Bill updates);
     void deleteBill(int bill_id);
     void annotateBill(int bill_id, model::Annotation a);
+    int GetNextBillId(int owner_id);
 private:
     std::shared_ptr<repo::IBillRepository> bill_repository_;
     std::shared_ptr<repo::IAnnotationRepository> annotation_repository_;
