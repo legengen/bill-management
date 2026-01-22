@@ -5,10 +5,10 @@
 #include "VisitScreen.h"
 #include "HomeScreen.h"
 #include "ChangePasswordScreen.h"
-// #include "gui/screens/BillListScreen.h"
+//#include "BillListScreen.h"
 #include "BillCreateScreen.h"
-// #include "gui/screens/StatisticsScreen.h"
-// #include "gui/screens/ProfileScreen.h"
+// #include "StatisticsScreen.h"
+#include "ProfileScreen.h"
 #include <ftxui/component/screen_interactive.hpp>
 
 App* App::instance_ = nullptr;
@@ -38,7 +38,7 @@ void App::RegisterScreens() {
     // router.Register(Route::BillList, []() { return CreateBillListScreen(); });
     router.Register(Route::BillCreate, []() { return CreateBillCreateScreen(); });
     // router.Register(Route::Statistics, []() { return CreateStatisticsScreen(); });
-    // router.Register(Route::Profile, []() { return CreateProfileScreen(); });
+    router.Register(Route::Profile, []() { return CreateProfileScreen(); });
 }
 
 void App::Run() {
