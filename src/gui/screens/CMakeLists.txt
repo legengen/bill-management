@@ -8,6 +8,7 @@ set(screen_lists
     ChangePasswordScreen
     BillCreateScreen
     ProfileScreen
+    QueryByEventScreen
 )
 foreach(screen_name ${screen_lists})
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${screen_name}.cc)
