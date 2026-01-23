@@ -83,7 +83,7 @@ ftxui::Component CreateProfileScreen() {
     state->LoadBills();
 
     auto query_by_event_btn = Button("按事件查询", [state] {
-        DialogManager::Instance().ShowInfo("按事件查询功能开发中...");
+        Router::Instance().NavigateTo(Route::QueryByEvent);
     });
 
     auto query_by_time_btn = Button("按时间查询", [state] {

@@ -30,7 +30,7 @@ int main() {
         // 4. 创建 Service
         auto auth_service = std::make_shared<AuthService>(user_repo);
         auto user_service = std::make_shared<UserService>(user_repo);
-        auto bill_service = std::make_shared<BillService>(bill_repo, annotation_repo);
+        auto bill_service = std::make_shared<BillService>(bill_repo, annotation_repo, user_repo);
         auto event_service = std::make_shared<EventService>(event_repo);
         auto stats_service = std::make_shared<StatisticsService>(bill_repo);
         

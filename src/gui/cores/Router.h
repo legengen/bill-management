@@ -18,7 +18,8 @@ enum class Route {
     Statistics,
     EventManage,
     UserManage,
-    Profile
+    Profile,
+    QueryByEvent,
 };
 
 class Router {
