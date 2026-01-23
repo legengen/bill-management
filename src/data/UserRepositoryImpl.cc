@@ -35,6 +35,10 @@ std::vector<model::User> UserRepositoryImpl::queryByPhonePartial(const std::stri
     return db_->GetStorage().get_all<model::User>(where(like(&model::User::phone, "%" + partial + "%")));
 }
 
+std::vector<model::User> UserRepositoryImpl::queryAll() {
+    return db_->GetStorage().get_all<model::User>();
+}
+
 bool UserRepositoryImpl::setBalanceByPhone(const std::string& phone, double balance) {
     if (phone.empty()) {
         return false;

@@ -11,12 +11,17 @@ std::optional<model::User> UserService::GetUser(int user_id){
     return user;
 }
 
+std::optional<model::User> UserService::GetUserByPhone(const std::string& phone) {
+    return user_repository_->queryByPhone(phone);
+}
+
 std::vector<model::User> UserService::QueryUserByPhone(const std::string& phone){
-    if (phone.empty()) {
-        return std::vector<model::User>();
-    }
     auto users = user_repository_->queryByPhonePartial(phone);
     return users;
+}
+
+std::vector<model::User> UserService::GetAllUsers() {
+    return user_repository_->queryAll();  // 获取全部
 }
 
 void UserService::SetBalance(int user_id, double amount){

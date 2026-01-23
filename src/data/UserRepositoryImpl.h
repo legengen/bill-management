@@ -11,6 +11,7 @@ public:
     std::optional<model::User> findById(int id) override;
     std::optional<model::User> queryByPhone(const std::string& phone) override;
     std::vector<model::User> queryByPhonePartial(const std::string& partial) override;
+    std::vector<model::User> queryAll() override;
     bool setBalanceByPhone(const std::string& phone, double balance) override;
     
 private:
