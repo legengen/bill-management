@@ -19,6 +19,13 @@ public:
     std::optional<model::User> GetCurrentUser() const { return current_user_; }
     int GetUserId() const { return current_user_ ?  current_user_->id : 0; }
     std::string GetUsername() const { return current_user_ ? current_user_->username : ""; }
+    std::string GetPhone() const { return current_user_ ? current_user_->phone : ""; }
+    
+    void UpdateBalance(double new_balance) {
+        if (current_user_.has_value()) {
+            current_user_->balance = new_balance;
+        }
+    }
     
 private:
     Session() = default;
