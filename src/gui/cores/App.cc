@@ -7,7 +7,7 @@
 #include "ChangePasswordScreen.h"
 #include "UserManageScreen.h"
 #include "EventManageScreen.h"
-//#include "BillListScreen.h"
+#include "BillManageScreen.h"
 #include "BillCreateScreen.h"
 // #include "StatisticsScreen.h"
 #include "ProfileScreen.h"
@@ -40,7 +40,7 @@ void App::RegisterScreens() {
     router.Register(Route::ChangePassword, []() { return CreateChangePasswordScreen(); });
     router.Register(Route::UserManage, []() { return CreateUserManageScreen(); });
     router.Register(Route::EventManage, []() { return CreateEventManageScreen(); });
-    // router.Register(Route::BillList, []() { return CreateBillListScreen(); });
+    router.Register(Route::BillManage, []() { return CreateBillManageScreen(); });
     router.Register(Route::BillCreate, []() { return CreateBillCreateScreen(); });
     // router.Register(Route::Statistics, []() { return CreateStatisticsScreen(); });
     router.Register(Route::Profile, []() { return CreateProfileScreen(); });

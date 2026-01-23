@@ -13,19 +13,19 @@ ftxui::Component CreateHomeScreen() {
     bool is_admin = session.IsAdmin();
     
     // ==================== 管理员按钮 ====================
-    auto user_manage_btn = Button(" 👥 用户管理 ", [] {
+    auto user_manage_btn = Button("用户管理 ", [] {
         Router::Instance().NavigateTo(Route::UserManage);
     });
     
-    auto event_manage_btn = Button(" ⚙️ 事件管理 ", [] {
+    auto event_manage_btn = Button("事件管理 ", [] {
         Router::Instance().NavigateTo(Route::EventManage);
     });
     
-    auto bill_manage_btn = Button(" 📋 账单管理 ", [] {
-        Router::Instance().NavigateTo(Route::BillList);
+    auto bill_manage_btn = Button("账单管理 ", [] {
+        Router::Instance().NavigateTo(Route::BillManage);
     });
     
-    auto admin_logout_btn = Button(" 🚪 退出登录 ", [] {
+    auto admin_logout_btn = Button("退出登录 ", [] {
         Session::Instance().Logout();
         Router::Instance().NavigateTo(Route::Visit);
     });

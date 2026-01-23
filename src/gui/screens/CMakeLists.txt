@@ -8,6 +8,7 @@ set(screen_lists
     ChangePasswordScreen
     UserManageScreen
     EventManageScreen
+    BillManageScreen
     BillCreateScreen
     ProfileScreen
     QueryByEventScreen
