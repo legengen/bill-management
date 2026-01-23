@@ -1,16 +1,25 @@
 #include <BillService.h>
 
 std::optional<model::Bill> BillService::CreateBill(int owner_id, model::Bill data) {
-    if (owner_id <= 0) {
+    last_error_.clear();
+
+    auto user = user_repository_->findById(owner_id);
+    if (!user.has_value()) {
+        last_error_ = "用户不存在";
         return std::nullopt;
     }
 
-    if (data.amount <= 0.0) {
+    double new_balance = user->balance - data.amount;
+    if (new_balance < 0) {
+        last_error_ = "余额不足，当前余额: " + std::to_string(user->balance);
         return std::nullopt;
-    } 
+    }
 
     data.owner_id = owner_id;
     bill_repository_->save(data);
+
+    user_repository_->setBalanceByPhone(user->phone, new_balance);
+
     return data;
 }
 

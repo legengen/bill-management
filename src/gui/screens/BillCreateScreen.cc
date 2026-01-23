@@ -99,12 +99,17 @@ ftxui::Component CreateBillCreateScreen() {
         auto result = bill_service.CreateBill(owner_id, bill_data);
         
         if (result.has_value()) {
+            auto user = session.GetCurrentUser();
+            if (user.has_value()) {
+                session.UpdateBalance(user->balance + bill_data.amount);
+            }
+            
             DialogManager::Instance().ShowSuccess(
                 "创建成功！账单号: " + std::to_string(state->next_bill_id)
             );
             Router::Instance().NavigateTo(Route::Home);
         } else {
-            DialogManager::Instance().ShowError("创建账单失败");
+            DialogManager::Instance().ShowError(bill_service.GetLastError());
         }
     });
 
