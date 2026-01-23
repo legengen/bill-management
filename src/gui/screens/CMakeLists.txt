@@ -6,6 +6,7 @@ set(screen_lists
     VisitScreen
     HomeScreen
     ChangePasswordScreen
+    UserManageScreen
     BillCreateScreen
     ProfileScreen
     QueryByEventScreen

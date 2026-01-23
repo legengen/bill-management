@@ -5,6 +5,7 @@
 #include "VisitScreen.h"
 #include "HomeScreen.h"
 #include "ChangePasswordScreen.h"
+#include "UserManageScreen.h"
 //#include "BillListScreen.h"
 #include "BillCreateScreen.h"
 // #include "StatisticsScreen.h"
@@ -36,6 +37,7 @@ void App::RegisterScreens() {
     router.Register(Route::Register, []() { return CreateRegisterScreen(); });
     router.Register(Route::Home, []() { return CreateHomeScreen(); });
     router.Register(Route::ChangePassword, []() { return CreateChangePasswordScreen(); });
+    router.Register(Route::UserManage, []() { return CreateUserManageScreen(); });
     // router.Register(Route::BillList, []() { return CreateBillListScreen(); });
     router.Register(Route::BillCreate, []() { return CreateBillCreateScreen(); });
     // router.Register(Route::Statistics, []() { return CreateStatisticsScreen(); });
