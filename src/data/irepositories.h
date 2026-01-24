@@ -41,7 +41,7 @@ namespace repo {
         virtual std::vector<model::Bill> queryByTimeInOrder(model::Timestamp from, model::Timestamp to) = 0; // 仅管理员可用
         virtual std::vector<model::Bill> queryByTimeAndEventInOrder(model::Timestamp from, model::Timestamp to) = 0; // 仅管理员可用
 
-        virtual int getNextBillId(int owner_id) = 0;
+        virtual int getNextBillId() = 0;
 
         virtual void remove(int id) = 0;
     };

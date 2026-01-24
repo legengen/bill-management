@@ -22,7 +22,7 @@ public:
     std::vector<model::Bill> queryByTimeInOrder(model::Timestamp from, model::Timestamp to) override; // 仅管理员可用
     std::vector<model::Bill> queryByTimeAndEventInOrder(model::Timestamp from, model::Timestamp to) override; // 仅管理员可用
 
-    int getNextBillId(int owner_id) override;
+    int getNextBillId() override;
 
     void remove(int id) override;
 private:

@@ -97,6 +97,6 @@ void BillService::annotateBill(int bill_id, model::Annotation a) {
     bill_repository_->save(*bill);
 }
 
-int BillService::GetNextBillId(int owner_id) {
-    return bill_repository_->getNextBillId(owner_id);
+int BillService::GetNextBillId() {
+    return bill_repository_->getNextBillId();
 }

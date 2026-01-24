@@ -18,7 +18,7 @@ public:
     void editBill(int bill_id, model::Bill updates);
     void deleteBill(int bill_id);
     void annotateBill(int bill_id, model::Annotation a);
-    int GetNextBillId(int owner_id);
+    int GetNextBillId();
 
     std::string GetLastError() const { return last_error_; }
 private:

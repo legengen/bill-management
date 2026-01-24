@@ -42,7 +42,7 @@ struct BillCreateState {
     void LoadNextBillId() {
         auto& session = Session::Instance();
         auto& bill_service = App::Instance().GetBillService();
-        next_bill_id = bill_service.GetNextBillId(session.GetUserId());
+        next_bill_id = bill_service.GetNextBillId();
     }
     
     int GetSelectedEventId() const {

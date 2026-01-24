@@ -136,18 +136,17 @@ void BillRepositoryImpl::remove(int id) {
 
 // ...existing code...
 
-int BillRepositoryImpl::getNextBillId(int owner_id) {
+int BillRepositoryImpl::getNextBillId() {
     auto& storage = db_->GetStorage();
     
-    // 获取该用户的所有账单，按ID降序排列，取第一个
+    // 获取所有账单中最大的ID
     auto bills = storage.get_all<model::Bill>(
-        where(c(&model::Bill::owner_id) == owner_id),
         order_by(&model::Bill::id).desc(),
         limit(1)
     );
     
     if (bills.empty()) {
-        return 1;  // 该用户第一笔账单
+        return 1;  // 没有任何账单，从1开始
     }
     
     return bills[0].id + 1;
