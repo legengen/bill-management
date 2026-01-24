@@ -3,8 +3,10 @@
 #include "Router.h"
 #include "Session.h"
 #include "UserInfoBar.h"
+#include "PageLayout.h"
 #include "Dialog.h"
 #include <ftxui/component/component.hpp>
+#include <ftxui/component/event.hpp>
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/dom/table.hpp>
 #include <memory>
@@ -18,16 +20,17 @@ using namespace ftxui;
 struct ProfileState {
     std::vector<model::Bill> bills;
     int current_page = 0;
-    int page_size = 5;
+    int page_size = 3;
     
-    // 筛选状态
     bool is_filtered = false;
     std::string filter_info;
-    
-    // 日期输入（单个日期）
+
     std::string query_year;
     std::string query_month;
     std::string query_day;
+
+    std::vector<model::Event> all_events;
+    int selected_event_index = 0;
     
     void LoadAllBills() {
         auto& session = Session::Instance();
@@ -36,6 +39,42 @@ struct ProfileState {
         is_filtered = false;
         filter_info.clear();
         current_page = 0;
+    }
+    
+    void LoadAllEvents() {
+        auto& event_service = App::Instance().GetEventService();
+        all_events = event_service.GetAllEvents();
+        selected_event_index = 0;
+    }
+    
+    std::vector<std::string> GetEventNames() const {
+        std::vector<std::string> names;
+        for (const auto& event : all_events) {
+            names.push_back(event.name);
+        }
+        if (names.empty()) {
+            names.push_back("无可用事件");
+        }
+        return names;
+    }
+    
+    bool QueryByEvent() {
+        if (all_events.empty() || selected_event_index < 0 || 
+            selected_event_index >= static_cast<int>(all_events.size())) {
+            return false;
+        }
+        
+        int event_id = all_events[selected_event_index].id;
+        std::string event_name = all_events[selected_event_index].name;
+        
+        auto& session = Session::Instance();
+        auto& bill_service = App::Instance().GetBillService();
+        bills = bill_service.queryByEvent(session.GetUserId(), event_id);
+        
+        is_filtered = true;
+        filter_info = "事件: " + event_name;
+        current_page = 0;
+        return true;
     }
     
     bool ParseDate(const std::string& year, const std::string& month, const std::string& day, model::Timestamp& out) {
@@ -63,7 +102,6 @@ struct ProfileState {
         }
     }
     
-    // 查询指定日期的账单
     bool QueryByDate() {
         model::Timestamp start_ts;
         
@@ -71,16 +109,14 @@ struct ProfileState {
             return false;
         }
         
-        // 当天结束时间 = 开始时间 + 24小时
         model::Timestamp end_ts = start_ts + 24 * 60 * 60;
         
-        // 直接调用 BillService 查询
         auto& session = Session::Instance();
         auto& bill_service = App::Instance().GetBillService();
         bills = bill_service.QueryByTime(session.GetUserId(), start_ts, end_ts);
         
         is_filtered = true;
-        filter_info = query_year + "-" + query_month + "-" + query_day;
+        filter_info = "日期: " + query_year + "-" + query_month + "-" + query_day;
         current_page = 0;
         return true;
     }
@@ -146,21 +182,31 @@ struct ProfileState {
     }
 };
 
+// 查询弹窗类型
+enum class QueryDialogType {
+    None,
+    TimeQuery,
+    EventQuery,
+};
+
 ftxui::Component CreateProfileScreen() {
     auto state = std::make_shared<ProfileState>();
     state->LoadAllBills();
+    state->LoadAllEvents();
     state->InitDateInputs();
     
-    auto show_time_dialog = std::make_shared<bool>(false);
+    auto current_dialog = std::make_shared<QueryDialogType>(QueryDialogType::None);
+    auto tab_index = std::make_shared<int>(0);
+    auto button_index = std::make_shared<int>(0);  // 按钮焦点索引
 
-    // 单个日期输入
+    // ==================== 时间查询弹窗 ====================
     auto year_input = Input(&state->query_year, "年");
     auto month_input = Input(&state->query_month, "月");
     auto day_input = Input(&state->query_day, "日");
 
-    auto dialog_confirm_btn = Button("确认", [state, show_time_dialog] {
+    auto time_confirm_btn = Button("确认", [state, current_dialog] {
         if (state->QueryByDate()) {
-            *show_time_dialog = false;
+            *current_dialog = QueryDialogType::None;
             DialogManager::Instance().ShowSuccess(
                 "查询完成，共 " + std::to_string(state->bills.size()) + " 条记录"
             );
@@ -169,22 +215,50 @@ ftxui::Component CreateProfileScreen() {
         }
     });
 
-    auto dialog_cancel_btn = Button("取消", [show_time_dialog] {
-        *show_time_dialog = false;
+    auto time_cancel_btn = Button("取消", [current_dialog] {
+        *current_dialog = QueryDialogType::None;
     });
 
-    auto dialog_container = Container::Vertical({
+    auto time_dialog_container = Container::Vertical({
         Container::Horizontal({year_input, month_input, day_input}),
-        Container::Horizontal({dialog_confirm_btn, dialog_cancel_btn}),
+        Container::Horizontal({time_confirm_btn, time_cancel_btn}),
     });
 
-    auto query_by_event_btn = Button("按事件查询", [] {
-        Router::Instance().NavigateTo(Route::QueryByEvent);
+    // ==================== 事件查询弹窗 ====================
+    auto event_names = std::make_shared<std::vector<std::string>>(state->GetEventNames());
+    auto event_dropdown = Dropdown(event_names.get(), &state->selected_event_index);
+
+    auto event_confirm_btn = Button("确认", [state, current_dialog] {
+        if (state->QueryByEvent()) {
+            *current_dialog = QueryDialogType::None;
+            DialogManager::Instance().ShowSuccess(
+                "查询完成，共 " + std::to_string(state->bills.size()) + " 条记录"
+            );
+        } else {
+            DialogManager::Instance().ShowError("请选择有效事件");
+        }
     });
 
-    auto query_by_time_btn = Button("按时间查询", [state, show_time_dialog] {
+    auto event_cancel_btn = Button("取消", [current_dialog] {
+        *current_dialog = QueryDialogType::None;
+    });
+
+    auto event_dialog_container = Container::Vertical({
+        event_dropdown,
+        Container::Horizontal({event_confirm_btn, event_cancel_btn}),
+    });
+
+    // ==================== 主页面按钮 ====================
+    auto query_by_event_btn = Button("按事件查询", [state, current_dialog, event_names] {
+        state->LoadAllEvents();
+        *event_names = state->GetEventNames();
+        state->selected_event_index = 0;
+        *current_dialog = QueryDialogType::EventQuery;
+    });
+
+    auto query_by_time_btn = Button("按时间查询", [state, current_dialog] {
         state->InitDateInputs();
-        *show_time_dialog = true;
+        *current_dialog = QueryDialogType::TimeQuery;
     });
     
     auto show_all_btn = Button("显示全部", [state] {
@@ -195,44 +269,65 @@ ftxui::Component CreateProfileScreen() {
         Router::Instance().NavigateTo(Route::Home);
     });
 
-    auto prev_btn = Button("◀ 上一页", [state] {
-        state->PrevPage();
-    });
-
-    auto next_btn = Button("下一页 ▶", [state] {
-        state->NextPage();
-    });
-
+    // 使用 Vertical 容器让上下键工作
     auto main_container = Container::Vertical({
-        Container::Horizontal({prev_btn, next_btn}),
-        Container::Horizontal({query_by_event_btn, query_by_time_btn, show_all_btn, return_btn}),
-    });
+        query_by_event_btn, 
+        query_by_time_btn, 
+        show_all_btn, 
+        return_btn,
+    }, button_index.get());
 
-    auto tab_index = std::make_shared<int>(0);
+    // ==================== Tab 容器 ====================
     auto container = Container::Tab({
         main_container,
-        dialog_container,
+        time_dialog_container,
+        event_dialog_container,
     }, tab_index.get());
 
-    return Renderer(container, [=] {
-        *tab_index = *show_time_dialog ? 1 : 0;
-        
-        auto title = text("账单查询") | bold | center;
-        auto user_info = RenderUserInfoBar(PageType::Profile);
-        
-        Element filter_status;
-        if (state->is_filtered) {
-            filter_status = hbox({
-                text("查询日期: ") | bold,
-                text(state->filter_info) | color(Color::Green),
-                text("  共 " + std::to_string(state->bills.size()) + " 条记录"),
-            }) | center;
-        } else {
-            filter_status = text("显示全部账单，共 " + std::to_string(state->bills.size()) + " 条记录") | center | dim;
+    LayoutConfig config;
+    config.button_width = 12;
+    config.content_padding = 4;
+    config.outer_padding = 2;
+    config.content_height = 12;
+
+    const int COL_ID = 8;
+    const int COL_EVENT = 10;
+    const int COL_AMOUNT = 10;
+    const int COL_DESC = 12;
+    const int COL_TIME = 18;
+
+    // 事件处理：左右键翻页
+    auto component_with_event = CatchEvent(container, [state, current_dialog](Event event) {
+        // 弹窗打开时不处理翻页
+        if (*current_dialog != QueryDialogType::None) {
+            return false;
         }
         
+        if (event == Event::ArrowLeft) {
+            state->PrevPage();
+            return true;
+        }
+        if (event == Event::ArrowRight) {
+            state->NextPage();
+            return true;
+        }
+        
+        return false;
+    });
+
+    return Renderer(component_with_event, [=]() {
+        // 更新 tab_index
+        switch (*current_dialog) {
+            case QueryDialogType::None:       *tab_index = 0; break;
+            case QueryDialogType::TimeQuery:  *tab_index = 1; break;
+            case QueryDialogType::EventQuery: *tab_index = 2; break;
+        }
+        
+        auto user_info = RenderUserInfoBar(PageType::Profile);
+        
+        // 构建表格数据
         std::vector<std::vector<std::string>> table_data;
-        table_data.push_back({"账单编号", "事项名称", "金额", "备注", "时间"});
+        table_data.push_back({"编号", "事项", "金额", "备注", "时间"});
         
         auto current_bills = state->GetCurrentPageBills();
         for (const auto& bill : current_bills) {
@@ -245,93 +340,101 @@ ftxui::Component CreateProfileScreen() {
             });
         }
         
-        if (current_bills.empty()) {
-            table_data.push_back({"", "", "暂无账单数据", "", ""});
+        // 补充空行
+        while (table_data.size() < static_cast<size_t>(state->page_size + 1)) {
+            table_data.push_back({"", "", "", "", ""});
         }
         
         auto table = Table(table_data);
+        
+        table.SelectAll().SeparatorVertical(LIGHT);
+        table.SelectAll().SeparatorHorizontal(LIGHT);
         table.SelectAll().Border(LIGHT);
-        table.SelectRow(0).Decorate(bold);
-        table.SelectColumn(0).DecorateCells(size(WIDTH, EQUAL, 10));
-        table.SelectColumn(1).DecorateCells(size(WIDTH, EQUAL, 12));
-        table.SelectColumn(2).DecorateCells(size(WIDTH, EQUAL, 12));
-        table.SelectColumn(3).DecorateCells(size(WIDTH, EQUAL, 15));
-        table.SelectColumn(4).DecorateCells(size(WIDTH, EQUAL, 18));
+        
+        table.SelectColumn(0).DecorateCells(size(WIDTH, EQUAL, COL_ID));
+        table.SelectColumn(1).DecorateCells(size(WIDTH, EQUAL, COL_EVENT));
+        table.SelectColumn(2).DecorateCells(size(WIDTH, EQUAL, COL_AMOUNT));
+        table.SelectColumn(3).DecorateCells(size(WIDTH, EQUAL, COL_DESC));
+        table.SelectColumn(4).DecorateCells(size(WIDTH, EQUAL, COL_TIME));
+        
         table.SelectAll().DecorateCells(center);
+        table.SelectRow(0).Decorate(bold);
+        table.SelectRow(0).DecorateCells(bgcolor(Color::Red));
         
         auto table_element = table.Render();
-        
-        auto page_info = text("第 " + std::to_string(state->current_page + 1) + 
-                              " / " + std::to_string(state->GetTotalPages()) + " 页") | center;
-        
-        auto page_buttons = hbox({
-            filler(),
-            prev_btn->Render() | size(WIDTH, EQUAL, 12),
-            text("  "),
-            next_btn->Render() | size(WIDTH, EQUAL, 12),
-            filler(),
-        });
-        
-        auto bottom_buttons = hbox({
-            filler(),
-            query_by_event_btn->Render() | size(WIDTH, EQUAL, 14),
-            text(" "),
-            query_by_time_btn->Render() | size(WIDTH, EQUAL, 14),
-            text(" "),
-            show_all_btn->Render() | size(WIDTH, EQUAL, 12),
-            text(" "),
-            return_btn->Render() | size(WIDTH, EQUAL, 10),
-            filler(),
-        });
-        
-        auto content = vbox({
-            title,
-            user_info,
-            filter_status,
-            separator(),
+
+        auto page_info = hbox({
+            text("第 " + std::to_string(state->current_page + 1) + 
+                 "/" + std::to_string(state->GetTotalPages()) + " 页"),
+            filler() | size(WIDTH, EQUAL, 15),
+            text("← → 切换页码"),
+        }) | center;
+
+        auto content_area = vbox({
             table_element | center,
             text(""),
             page_info,
-            page_buttons,
-            text(""),
-            bottom_buttons,
+        });
+
+        auto button_area = hbox({
+            query_by_event_btn->Render() | size(WIDTH, EQUAL, config.button_width),
+            text(" "),
+            query_by_time_btn->Render() | size(WIDTH, EQUAL, config.button_width),
+            filler(),
+            show_all_btn->Render() | size(WIDTH, EQUAL, config.button_width),
+            text(" "),
+            return_btn->Render() | size(WIDTH, EQUAL, config.button_width),
         });
         
-        auto main_page = vbox({
-            filler() | size(HEIGHT, EQUAL, 1),
-            hbox({
-                filler() | size(WIDTH, EQUAL, 2),
-                content | flex,
-                filler() | size(WIDTH, EQUAL, 2),
-            }),
-            filler() | size(HEIGHT, EQUAL, 1),
-        }) | border;
+        auto main_page = CreatePageLayout(user_info, content_area, button_area, config);
         
-        if (*show_time_dialog) {
-            // 用空格填充创建不透明背景
-            auto make_solid_background = [](Element content) {
-                return content | bgcolor(Color::Default);
-            };
-            
+        // ==================== 弹窗渲染 ====================
+        if (*current_dialog == QueryDialogType::TimeQuery) {
             auto dialog_box = vbox({
                 text("按时间查询") | bold | center,
                 separator(),
                 text(""),
                 hbox({
-                    text("查询日期: ") | center,
+                    text("查询日期: ") | vcenter,
                     year_input->Render() | size(WIDTH, EQUAL, 6) | border,
-                    text("-") | center,
+                    text("-") | vcenter,
                     month_input->Render() | size(WIDTH, EQUAL, 4) | border,
-                    text("-") | center,
+                    text("-") | vcenter,
                     day_input->Render() | size(WIDTH, EQUAL, 4) | border,
                 }) | center,
                 text(""),
                 separator(),
                 hbox({
                     filler(),
-                    dialog_confirm_btn->Render() | size(WIDTH, EQUAL, 10),
+                    time_confirm_btn->Render() | size(WIDTH, EQUAL, 10),
                     text("  "),
-                    dialog_cancel_btn->Render() | size(WIDTH, EQUAL, 10),
+                    time_cancel_btn->Render() | size(WIDTH, EQUAL, 10),
+                    filler(),
+                }),
+            }) | border | clear_under | center;
+            
+            return dbox({
+                main_page | dim,
+                dialog_box,
+            });
+        }
+        
+        if (*current_dialog == QueryDialogType::EventQuery) {
+            auto dialog_box = vbox({
+                text("按事件查询") | bold | center,
+                separator(),
+                text(""),
+                hbox({
+                    text("选择事件: ") | vcenter,
+                    event_dropdown->Render() | size(WIDTH, EQUAL, 20),
+                }) | center,
+                text(""),
+                separator(),
+                hbox({
+                    filler(),
+                    event_confirm_btn->Render() | size(WIDTH, EQUAL, 10),
+                    text("  "),
+                    event_cancel_btn->Render() | size(WIDTH, EQUAL, 10),
                     filler(),
                 }),
             }) | border | clear_under | center;
