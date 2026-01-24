@@ -10,6 +10,7 @@ set(screen_lists
     EventManageScreen
     BillManageScreen
     BillCreateScreen
+    BillQueryScreen
     ProfileScreen
     QueryByEventScreen
 )

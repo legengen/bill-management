@@ -9,6 +9,7 @@
 #include "EventManageScreen.h"
 #include "BillManageScreen.h"
 #include "BillCreateScreen.h"
+#include "BillQueryScreen.h"
 // #include "StatisticsScreen.h"
 #include "ProfileScreen.h"
 #include "QueryByEventScreen.h"
@@ -42,7 +43,7 @@ void App::RegisterScreens() {
     router.Register(Route::EventManage, []() { return CreateEventManageScreen(); });
     router.Register(Route::BillManage, []() { return CreateBillManageScreen(); });
     router.Register(Route::BillCreate, []() { return CreateBillCreateScreen(); });
-    // router.Register(Route::Statistics, []() { return CreateStatisticsScreen(); });
+    router.Register(Route::BillQuery, []() { return CreateBillQueryScreen(); });
     router.Register(Route::Profile, []() { return CreateProfileScreen(); });
     router.Register(Route::QueryByEvent, []() { return CreateQueryByEventScreen(); });
 }
