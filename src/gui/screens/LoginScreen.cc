@@ -49,26 +49,36 @@ Component CreateLoginScreen() {
     });
     
     return Renderer(container, [=] {
-        return vbox({
-            filler(),
+        return hbox({
+            filler() | size(WIDTH, EQUAL, 5),
             vbox({
-                filler() | size(HEIGHT, EQUAL, 2),
+                filler() | size(HEIGHT, EQUAL, 1),
                 text("登陆界面") | bold | center,
-                filler() | size(HEIGHT, EQUAL, 2),
-                hbox({text("账号:"), phone_input->Render()}) | size(WIDTH, EQUAL, 40),
-                filler() | size(HEIGHT, EQUAL, 2),
-                hbox({text("密码:"), password_input->Render()}) | size(WIDTH, EQUAL, 40),
-                filler() | size(HEIGHT, EQUAL, 2),
-                text(""),
+                filler() | size(HEIGHT, EQUAL, 1),
+
+                hbox({
+                    text("手机号:") | center | size(WIDTH, EQUAL, 7), 
+                    phone_input->Render() | border,
+                }),
+                filler() | size(HEIGHT, EQUAL, 1),
+                hbox({
+                    text("姓名:") | center | size(WIDTH, EQUAL, 7), 
+                    password_input->Render() | border,
+                }),
+
+                filler() | size(HEIGHT, EQUAL, 1),
                 text(*error_msg) | color(Color::Red) | center,
-                text(""),
+                filler() | size(HEIGHT, EQUAL, 1),
+
                 hbox({
                     login_button->Render() | size(WIDTH, EQUAL, 15),
                     text("  "),
                     return_button->Render() | size(WIDTH, EQUAL, 15),
                 }) | center,
-            }) | border | center,
-            filler(),
-        });
+            }) | flex,
+            filler() | size(WIDTH, EQUAL, 5),
+        })  | size(WIDTH, GREATER_THAN, 30)
+            | size(HEIGHT, GREATER_THAN, 12)
+            | border;
     });
 }

@@ -150,26 +150,26 @@ ftxui::Component CreateRegisterScreen() {
         
         auto form = vbox({
             hbox({
-                text("手 机 号: ") | size(WIDTH, EQUAL, 12),
-                phone_input->Render() | flex | border,
+                text("手机:") | size(WIDTH, EQUAL, 10) | center,
+                phone_input->Render() | border,
             }),
             text(""),
             
             hbox({
-                text("用 户 名: ") | size(WIDTH, EQUAL, 12),
-                username_input->Render() | flex | border,
+                text("姓名:") | size(WIDTH, EQUAL, 10) | center,
+                username_input->Render() | border,
             }),
             text(""),
             
             hbox({
-                text("密    码: ") | size(WIDTH, EQUAL, 12),
-                password_input->Render() | flex | border,
+                text("密码:") | size(WIDTH, EQUAL, 10) | center,
+                password_input->Render() | border,
             }),
             text(""),
             
             hbox({
-                text("确认密码: ") | size(WIDTH, EQUAL, 12),
-                confirm_input->Render() | flex | border,
+                text("确认密码: ") | size(WIDTH, EQUAL, 10) | center,
+                confirm_input->Render() | border,
             }),
         });
         
@@ -189,18 +189,21 @@ ftxui::Component CreateRegisterScreen() {
         });
         
         auto content = vbox({
+            filler() | size(HEIGHT, EQUAL, 1),
             title,
-            text(""),
+            filler() | size(HEIGHT, EQUAL, 1),
             form,
             messages,
             buttons,
             text(""),
-        }) | border | size(WIDTH, EQUAL, 60) | center;
-        
-        return vbox({
-            filler(),
-            content,
-            filler(),
         });
+        
+        return hbox({
+            filler() | size(WIDTH, EQUAL, 5),
+            content | flex,
+            filler() | size(WIDTH, EQUAL, 5),
+        })  | size(WIDTH, GREATER_THAN, 30)
+            | size(HEIGHT, GREATER_THAN, 12)
+            | border;
     });
 }
