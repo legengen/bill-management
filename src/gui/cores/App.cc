@@ -10,7 +10,7 @@
 #include "BillManageScreen.h"
 #include "BillCreateScreen.h"
 #include "BillQueryScreen.h"
-// #include "StatisticsScreen.h"
+#include "BillStatsScreen.h"
 #include "ProfileScreen.h"
 #include "QueryByEventScreen.h"
 #include <ftxui/component/screen_interactive.hpp>
@@ -44,6 +44,7 @@ void App::RegisterScreens() {
     router.Register(Route::BillManage, []() { return CreateBillManageScreen(); });
     router.Register(Route::BillCreate, []() { return CreateBillCreateScreen(); });
     router.Register(Route::BillQuery, []() { return CreateBillQueryScreen(); });
+    router.Register(Route::BillStats, []() { return CreateBillStatsScreen(); });
     router.Register(Route::Profile, []() { return CreateProfileScreen(); });
     router.Register(Route::QueryByEvent, []() { return CreateQueryByEventScreen(); });
 }

@@ -11,6 +11,7 @@ set(screen_lists
     BillManageScreen
     BillCreateScreen
     BillQueryScreen
+    BillStatsScreen
     ProfileScreen
     QueryByEventScreen
 )
