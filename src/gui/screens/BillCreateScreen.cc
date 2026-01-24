@@ -129,29 +129,34 @@ ftxui::Component CreateBillCreateScreen() {
 
         auto welcome_text = text("新建手账") | bold | center;
 
+        const int LABEL_WIDTH = 10;
+
+        const int BUTTON_WIDTH = 12;
+
+        const int INPUT_WIDTH = 15;
         // 显示下一个账单编号
         auto LT = hbox({
-            text("账单号:") | center,
+            text("账单号:") | center | size(WIDTH, EQUAL, LABEL_WIDTH),
             filler() | size(WIDTH, EQUAL, 2),
             text(std::to_string(state->next_bill_id)) | center,
         });
 
         auto RT = hbox({
-            text("事件类型:") | center,
-            filler() | size(WIDTH, EQUAL, 1),
-            event_dropdown->Render() | size(WIDTH, EQUAL, 15) | center,
+            text("事件类型:") | center | size(WIDTH, EQUAL, LABEL_WIDTH),
+            filler(),
+            event_dropdown->Render() | size(WIDTH, EQUAL, INPUT_WIDTH) | center,
         });
 
         auto LB = hbox({
-            text("金额:") | center,
-            filler() | size(WIDTH, EQUAL, 2),
-            money_input->Render() | border | size(WIDTH, EQUAL, 15) | center,
+            text("金额:") | center | size(WIDTH, EQUAL, LABEL_WIDTH),
+            filler(),
+            money_input->Render() | border | size(WIDTH, EQUAL, INPUT_WIDTH) | center,
         });
 
         auto RB = hbox({
-            text("描述:") | center,
-            filler() | size(WIDTH, EQUAL, 2),
-            description_input->Render() | border | size(WIDTH, EQUAL, 15) | center,
+            text("描述:") | center | size(WIDTH, EQUAL, LABEL_WIDTH),
+            filler(),
+            description_input->Render() | border | size(WIDTH, EQUAL, INPUT_WIDTH) | center,
         });
 
         auto row1 = hbox({
@@ -169,13 +174,14 @@ ftxui::Component CreateBillCreateScreen() {
         auto buttons = hbox({
             filler(),
             confirm_button->Render() | size(WIDTH, EQUAL, 12),
-            text("  "),
+            filler(),
             return_button->Render() | size(WIDTH, EQUAL, 12),
             filler(),
         });
 
         auto content = vbox({
             welcome_text,
+            filler() | size(HEIGHT, EQUAL, 1),
             RenderUserInfoBar(PageType::Profile),
             text(""),
             row1,
