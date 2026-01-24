@@ -3,6 +3,7 @@
 #include "Router.h"
 #include "Session.h"
 #include "UserInfoBar.h"
+#include "PageLayout.h"
 #include <ftxui/component/component.hpp>
 #include <ftxui/dom/elements.hpp>
 
@@ -63,75 +64,52 @@ ftxui::Component CreateHomeScreen() {
         });
     }
 
-    const int BUTTON_WIDTH = 12;
-
-    const int BUTTON_AREA_PADDING = 8;
-
-    const int OUTER_PADDING = 2;
+    LayoutConfig config;
+    config.button_width = 12;
+    config.content_padding = 8;
+    config.outer_padding = 2;
+    config.content_height = 8;
     
-    // ==================== 渲染器 ====================
     return Renderer(container, [=, &session] {
         bool admin = session.IsAdmin();
-
-        auto welcome_text = text("欢迎来到智能家庭手账系统") | bold | center;
-
-        auto user_info = RenderUserInfoBar(PageType::Home);
-
-        Element button_area;
         
+        auto user_info = RenderUserInfoBar(PageType::Home);
+        
+        // 内容区域：四角分布的按钮
+        Element content_area;
         if (admin) {
-            button_area = vbox({
+            content_area = vbox({
                 hbox({
-                    user_manage_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
+                    user_manage_btn->Render() | size(WIDTH, EQUAL, config.button_width),
                     filler(),
-                    event_manage_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
+                    event_manage_btn->Render() | size(WIDTH, EQUAL, config.button_width),
                 }),
                 filler(),
                 hbox({
-                    bill_manage_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
+                    bill_manage_btn->Render() | size(WIDTH, EQUAL, config.button_width),
                     filler(),
-                    admin_logout_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
+                    admin_logout_btn->Render() | size(WIDTH, EQUAL, config.button_width),
                 }),
             });
         } else {
-            button_area = vbox({
+            content_area = vbox({
                 hbox({
-                    password_change_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
+                    password_change_btn->Render() | size(WIDTH, EQUAL, config.button_width),
                     filler(),
-                    bill_create_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
+                    bill_create_btn->Render() | size(WIDTH, EQUAL, config.button_width),
                 }),
                 filler(),
                 hbox({
-                    user_stats_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
+                    user_stats_btn->Render() | size(WIDTH, EQUAL, config.button_width),
                     filler(),
-                    user_logout_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
+                    user_logout_btn->Render() | size(WIDTH, EQUAL, config.button_width),
                 }),
             });
         }
-
-        auto button_area_with_padding = hbox({
-            filler() | size(WIDTH, EQUAL, BUTTON_AREA_PADDING),
-            button_area | flex,
-            filler() | size(WIDTH, EQUAL, BUTTON_AREA_PADDING),
-        }) | size(HEIGHT, EQUAL, 8);
-
-        auto content = vbox({
-            welcome_text,
-            text(""),
-            user_info,
-            text(""),
-            button_area_with_padding | flex,
-            text(""),
-        });
-
-        return vbox({
-            filler() | size(HEIGHT, EQUAL, 1),
-            hbox({
-                filler() | size(WIDTH, EQUAL, OUTER_PADDING),
-                content | flex,
-                filler() | size(WIDTH, EQUAL, OUTER_PADDING),
-            }),
-            filler() | size(HEIGHT, EQUAL, 1),
-        }) | border;
+        
+        // Home 页面没有底部按钮，使用空元素
+        Element button_area = text("");
+        
+        return CreatePageLayout(user_info, content_area, button_area, config);
     });
 }
