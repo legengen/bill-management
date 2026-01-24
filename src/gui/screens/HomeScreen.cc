@@ -13,25 +13,25 @@ ftxui::Component CreateHomeScreen() {
     bool is_admin = session.IsAdmin();
     
     // ==================== 管理员按钮 ====================
-    auto user_manage_btn = Button("用户管理 ", [] {
+    auto user_manage_btn = Button("用户管理", [] {
         Router::Instance().NavigateTo(Route::UserManage);
     });
     
-    auto event_manage_btn = Button("事件管理 ", [] {
+    auto event_manage_btn = Button("事件管理", [] {
         Router::Instance().NavigateTo(Route::EventManage);
     });
     
-    auto bill_manage_btn = Button("账单管理 ", [] {
+    auto bill_manage_btn = Button("账单管理", [] {
         Router::Instance().NavigateTo(Route::BillManage);
     });
     
-    auto admin_logout_btn = Button("退出登录 ", [] {
+    auto admin_logout_btn = Button("退出登录", [] {
         Session::Instance().Logout();
         Router::Instance().NavigateTo(Route::Visit);
     });
     
     // ==================== 普通用户按钮 ====================
-    auto password_change_btn = Button("修改密码 ", [] {
+    auto password_change_btn = Button("修改密码", [] {
         Router::Instance().NavigateTo(Route::ChangePassword);
     });
 
@@ -43,7 +43,7 @@ ftxui::Component CreateHomeScreen() {
         Router::Instance().NavigateTo(Route::Profile);
     });
     
-    auto user_logout_btn = Button("登出", [&session] {
+    auto user_logout_btn = Button("退出登录", [] {
         Session::Instance().Logout();
         Router::Instance().NavigateTo(Route::Visit);
     });
@@ -62,90 +62,76 @@ ftxui::Component CreateHomeScreen() {
             Container::Horizontal({user_stats_btn, user_logout_btn}),
         });
     }
+
+    const int BUTTON_WIDTH = 12;
+
+    const int BUTTON_AREA_PADDING = 8;
+
+    const int OUTER_PADDING = 2;
     
     // ==================== 渲染器 ====================
     return Renderer(container, [=, &session] {
         bool admin = session.IsAdmin();
-        std::string username = session.GetUsername();
-        
-        // 欢迎信息
-        auto welcome_text = vbox({
-            text("欢迎来到智能家庭手账系统") | bold | center,
-        });
-        
-        // 功能按钮区域
+
+        auto welcome_text = text("欢迎来到智能家庭手账系统") | bold | center;
+
+        auto user_info = RenderUserInfoBar(PageType::Home);
+
         Element button_area;
         
         if (admin) {
-            // 管理员布局：四角分布
             button_area = vbox({
-                // 上半部分
                 hbox({
-                    user_manage_btn->Render() | flex,
-                    filler() | size(WIDTH, EQUAL, 10),
-                    event_manage_btn->Render() | flex,
+                    user_manage_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
+                    filler(),
+                    event_manage_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
                 }),
-                filler() | size(HEIGHT, EQUAL, 3),
-                // 提示信息
+                filler(),
                 hbox({
-
-                }),
-                filler() | size(HEIGHT, EQUAL, 3),
-                // 下半部分
-                hbox({
-                    bill_manage_btn->Render() | flex,
-                    filler() | size(WIDTH, EQUAL, 10),
-                    admin_logout_btn->Render() | flex,
+                    bill_manage_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
+                    filler(),
+                    admin_logout_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
                 }),
             });
         } else {
-            // 普通用户布局：四角分布
             button_area = vbox({
-                // 上半部分
                 hbox({
-                    password_change_btn->Render() | flex,
-                    filler() | size(WIDTH, EQUAL, 10),
-                    bill_create_btn->Render() | flex,
+                    password_change_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
+                    filler(),
+                    bill_create_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
                 }),
-                filler() | size(HEIGHT, EQUAL, 3),
-                // 提示信息
+                filler(),
                 hbox({
-                    
-                }),
-                filler() | size(HEIGHT, EQUAL, 3),
-                // 下半部分
-                hbox({
-                    user_stats_btn->Render() | flex,
-                    filler() | size(WIDTH, EQUAL, 10),
-                    user_logout_btn->Render() | flex,
+                    user_stats_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
+                    filler(),
+                    user_logout_btn->Render() | size(WIDTH, EQUAL, BUTTON_WIDTH),
                 }),
             });
         }
-        
-        // 最终布局：外层留白
-        auto content = vbox({ 
-            // 当前页面信息
+
+        auto button_area_with_padding = hbox({
+            filler() | size(WIDTH, EQUAL, BUTTON_AREA_PADDING),
+            button_area | flex,
+            filler() | size(WIDTH, EQUAL, BUTTON_AREA_PADDING),
+        }) | size(HEIGHT, EQUAL, 8);
+
+        auto content = vbox({
             welcome_text,
             text(""),
-
-            // 上半部：用户信息栏
-            RenderUserInfoBar(PageType::Home),
+            user_info,
             text(""),
-            
-            // 按钮区域
-            button_area | flex,
+            button_area_with_padding | flex,
             text(""),
         });
-        
-        // 外层 vbox + hbox 留白
+
         return vbox({
-            filler() | size(HEIGHT, EQUAL, 1),  // 上边距
+            filler() | size(HEIGHT, EQUAL, 1),
             hbox({
-                filler() | size(WIDTH, EQUAL, 2),  // 左边距
+                filler() | size(WIDTH, EQUAL, OUTER_PADDING),
                 content | flex,
-                filler() | size(WIDTH, EQUAL, 2),  // 右边距
+                filler() | size(WIDTH, EQUAL, OUTER_PADDING),
             }),
-            filler() | size(HEIGHT, EQUAL, 1),  // 下边距
+            filler() | size(HEIGHT, EQUAL, 1),
         }) | border;
     });
 }
