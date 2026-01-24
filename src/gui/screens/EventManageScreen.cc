@@ -201,7 +201,7 @@ struct EventManageState {
     }
     
     std::string GetStatusText(int status) const {
-        return status == 1 ? "正常" : "冻结";
+        return status == model::EventStatus::Available ? "正常" : "冻结";
     }
 };
 
@@ -261,7 +261,7 @@ ftxui::Component CreateEventManageScreen() {
     
     // 状态修改弹窗组件
     auto set_normal_btn = Button("设为正常", [state] {
-        if (state->SetEventStatus(1)) {
+        if (state->SetEventStatus(model::EventStatus::Available)) {
             DialogManager::Instance().ShowSuccess("状态已修改为正常");
             state->CloseDialog();
         } else {
@@ -270,7 +270,7 @@ ftxui::Component CreateEventManageScreen() {
     });
     
     auto set_frozen_btn = Button("设为冻结", [state] {
-        if (state->SetEventStatus(0)) {
+        if (state->SetEventStatus(model::EventStatus::Frozen)) {
             DialogManager::Instance().ShowSuccess("状态已修改为冻结");
             state->CloseDialog();
         } else {
