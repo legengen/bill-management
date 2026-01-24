@@ -26,7 +26,12 @@ std::optional<model::Bill> BillRepositoryImpl::findById(int id) {
         }
     }
     return bill;
+}
 
+std::vector<model::Bill> BillRepositoryImpl::queryAll() {
+    auto& storage = db_->GetStorage();
+    
+    return storage.get_all<model::Bill>();
 }
 
 std::vector<model::Bill> BillRepositoryImpl::queryByEvent(int ownerId, int eventId) {
@@ -37,22 +42,11 @@ std::vector<model::Bill> BillRepositoryImpl::queryByEvent(int ownerId, int event
     );
 }
 
-std::vector<model::Bill> BillRepositoryImpl::queryByEvent(const std::string& name) {
+std::vector<model::Bill> BillRepositoryImpl::queryByEvent(int eventId) {
     auto& storage = db_->GetStorage();
     
-    // 先查找事件
-    auto events = storage.get_all<model::Event>(
-        where(c(&model::Event::name) == name)
-    );
-    
-    if (events.empty()) {
-        return {};
-    }
-    
-    int event_id = events[0].id;
-    
     return storage.get_all<model::Bill>(
-        where(c(&model::Bill::event_id) == event_id)
+        where(c(&model::Bill::event_id) == eventId)
     );
 }
 

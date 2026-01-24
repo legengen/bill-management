@@ -9,8 +9,10 @@ public:
 
     std::optional<model::Bill> findById(int id) override;
 
+    std::vector<model::Bill> queryAll() override;
+
     std::vector<model::Bill> queryByEvent(int ownerId, int eventId) override;
-    std::vector<model::Bill> queryByEvent(const std::string& name) override; // 仅管理员可用
+    std::vector<model::Bill> queryByEvent(int eventId) override; // 仅管理员可用
 
     std::vector<model::Bill> queryByTime(int ownerId, model::Timestamp from, model::Timestamp to) override;
     std::vector<model::Bill> queryByTime(model::Timestamp from, model::Timestamp to) override; // 仅管理员可用

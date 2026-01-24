@@ -25,7 +25,7 @@ std::optional<model::Bill> BillService::CreateBill(int owner_id, model::Bill dat
 
 std::vector<model::Bill> BillService::QueryByTime(int owner_id, model::Timestamp from, model::Timestamp to) {
     if (owner_id <= 0) {
-        return {};
+        return bill_repository_->queryByTime(from, to);
     }
 
     if (from > to) {
@@ -37,14 +37,14 @@ std::vector<model::Bill> BillService::QueryByTime(int owner_id, model::Timestamp
 
 std::vector<model::Bill> BillService::queryByEvent(int owner_id, int event_id) {
     if (owner_id <= 0 || event_id <= 0) {
-        return {};
+        return bill_repository_->queryByEvent(event_id);
     }
     return bill_repository_->queryByEvent(owner_id, event_id);
 }
 
 std::vector<model::Bill> BillService::queryByPhone(std::string phone) {
     if (phone.empty()) {
-        return {};
+        return bill_repository_->queryAll();
     }
     return bill_repository_->queryByPhone(phone);
 }

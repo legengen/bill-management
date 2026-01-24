@@ -28,8 +28,10 @@ namespace repo {
 
         virtual std::optional<model::Bill> findById(int id) = 0;
 
+        virtual std::vector<model::Bill> queryAll() = 0;
+
         virtual std::vector<model::Bill> queryByEvent(int ownerId, int eventId) = 0;
-        virtual std::vector<model::Bill> queryByEvent(const std::string& name) = 0; // 仅管理员可用
+        virtual std::vector<model::Bill> queryByEvent(int eventId) = 0; // 仅管理员可用
 
         virtual std::vector<model::Bill> queryByTime(int ownerId, model::Timestamp from, model::Timestamp to) = 0;
         virtual std::vector<model::Bill> queryByTime(model::Timestamp from, model::Timestamp to) = 0; // 仅管理员可用
