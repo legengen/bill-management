@@ -44,8 +44,8 @@ ftxui::Element RenderUserInfoBar(PageType page_type) {
     
     // 左侧：用户信息
     auto user_info = hbox({
-        text("欢迎，") | bold,
-        text(user->phone + ",") | dim,
+        text("欢迎,"),
+        text(user->phone + ","),
         text(user->role == "admin" ? "管理员" : "普通用户")
     });
 
@@ -54,14 +54,14 @@ ftxui::Element RenderUserInfoBar(PageType page_type) {
     balance_oss << std::fixed << std::setprecision(2) << user->balance;
     auto balance_info = hbox({
         filler(),
-        text("当前余额: ") | bold,
-        text(balance_oss.str()) | bold | color(Color::Yellow),
+        text("当前余额:"),
+        text(balance_oss.str()),
         filler(),
     });
     
     // 右侧：日期时间
     auto date_info = hbox({
-        text("日期: ") ,
+        text("日期:") ,
         text(GetCurrentDate()),
         text(" "),
     });
@@ -69,9 +69,9 @@ ftxui::Element RenderUserInfoBar(PageType page_type) {
     // 主信息栏
     auto main_bar = hbox({
         user_info,
-        filler(),
+        filler() | size(WIDTH, EQUAL, 1),
         balance_info,
-        filler(),
+        filler() | size(WIDTH, EQUAL, 1),
         date_info,
     });
     
