@@ -3,6 +3,7 @@ add_library(components)
 set(component_lists 
     UserInfoBar
     Dialog
+    PageLayout
 )
 foreach(component_name ${component_lists})
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${component_name}.cc)
