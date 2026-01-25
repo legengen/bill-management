@@ -23,7 +23,6 @@ struct ProfileState {
     int page_size = 3;
     
     bool is_filtered = false;
-    std::string filter_info;
 
     std::string query_year;
     std::string query_month;
@@ -37,7 +36,6 @@ struct ProfileState {
         auto& bill_service = App::Instance().GetBillService();
         bills = bill_service.queryByPhone(session.GetPhone());
         is_filtered = false;
-        filter_info.clear();
         current_page = 0;
     }
     
@@ -72,7 +70,6 @@ struct ProfileState {
         bills = bill_service.queryByEvent(session.GetUserId(), event_id);
         
         is_filtered = true;
-        filter_info = "事件: " + event_name;
         current_page = 0;
         return true;
     }
@@ -116,7 +113,6 @@ struct ProfileState {
         bills = bill_service.QueryByTime(session.GetUserId(), start_ts, end_ts);
         
         is_filtered = true;
-        filter_info = "日期: " + query_year + "-" + query_month + "-" + query_day;
         current_page = 0;
         return true;
     }
@@ -324,8 +320,7 @@ ftxui::Component CreateProfileScreen() {
         }
         
         auto user_info = RenderUserInfoBar(PageType::Profile);
-        
-        // 构建表格数据
+
         std::vector<std::vector<std::string>> table_data;
         table_data.push_back({"编号", "事项", "金额", "备注", "时间"});
         
@@ -339,8 +334,7 @@ ftxui::Component CreateProfileScreen() {
                 state->FormatTime(bill.created_at)
             });
         }
-        
-        // 补充空行
+
         while (table_data.size() < static_cast<size_t>(state->page_size + 1)) {
             table_data.push_back({"", "", "", "", ""});
         }
