@@ -5,14 +5,19 @@
 
 // 页面类型枚举
 enum class PageType {
+    Visit,
+    Login,
+    Register,
     Home,
+    ChangePassword,
+    BillManage,
+    BillQuery,
+    BillStats,
     BillCreate,
-    BillList,
-    Statistics,
     EventManage,
     UserManage,
     Profile,
-    Other
+    QueryByEvent,
 };
 
 // 渲染用户信息栏
