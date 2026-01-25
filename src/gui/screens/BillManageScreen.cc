@@ -3,6 +3,7 @@
 #include "Router.h"
 #include "Session.h"
 #include "UserInfoBar.h"
+#include "PageLayout.h"
 #include <ftxui/component/component.hpp>
 #include <ftxui/dom/elements.hpp>
 
@@ -21,41 +22,41 @@ ftxui::Component CreateBillManageScreen() {
         Router::Instance().NavigateTo(Route::Home);
     });
     
-    auto container = Container::Vertical({
+    auto container = Container::Horizontal({
         bill_query_btn,
         bill_stats_btn,
         return_btn,
     });
+
+    LayoutConfig config;
+    config.button_width = 14;
+    config.content_padding = 4;
+    config.outer_padding = 2;
+    config.content_height = 12;
     
     return Renderer(container, [=] {
-        auto title = text("账单管理") | bold | center;
-        auto user_info = RenderUserInfoBar(PageType::Home);
+        auto user_info = RenderUserInfoBar();
         
-        auto buttons = vbox({
-            bill_query_btn->Render() | size(WIDTH, EQUAL, 20) | center,
-            text(""),
-            bill_stats_btn->Render() | size(WIDTH, EQUAL, 20) | center,
-            text(""),
-            return_btn->Render() | size(WIDTH, EQUAL, 20) | center,
-        }) | center;
-        
-        auto content = vbox({
-            title,
-            user_info,
-            separator(),
+        // 内容区域 - 四角分布
+        auto content_area = vbox({
+            // 上方两个按钮：左上和右上
+            hbox({
+                bill_query_btn->Render() | size(WIDTH, EQUAL, config.button_width),
+                filler(),
+                bill_stats_btn->Render() | size(WIDTH, EQUAL, config.button_width),
+            }),
             filler(),
-            buttons,
-            filler(),
+            // 下方两个位置：左下占位 和 右下返回
+            hbox({
+                text("") | size(WIDTH, EQUAL, config.button_width),  // 左下占位
+                filler(),
+                return_btn->Render() | size(WIDTH, EQUAL, config.button_width),  // 右下返回
+            }),
         });
         
-        return vbox({
-            filler() | size(HEIGHT, EQUAL, 1),
-            hbox({
-                filler() | size(WIDTH, EQUAL, 2),
-                content | flex,
-                filler() | size(WIDTH, EQUAL, 2),
-            }),
-            filler() | size(HEIGHT, EQUAL, 1),
-        }) | border;
+        // 底部按钮区域为空（按钮已在内容区四角分布）
+        auto button_area = hbox({});
+        
+        return CreatePageLayout(user_info, content_area, button_area, config);
     });
 }
