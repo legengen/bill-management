@@ -3,6 +3,7 @@
 #include "Router.h"
 #include "Session.h"
 #include "UserInfoBar.h"
+#include "PageLayout.h"
 #include "Dialog.h"
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/event.hpp>
@@ -16,50 +17,43 @@
 
 using namespace ftxui;
 
-enum class EventDialogType {
-    None,
-    Create,
-    EditStatus
-};
-
 struct EventManageState {
     std::vector<model::Event> events;
     int current_page = 0;
-    int page_size = 5;
+    int page_size = 3;
     int selected_row = 0;
     
-    // 查询相关
     std::string search_name;
-    bool is_filtered = false;
-    
-    // 弹窗相关
-    EventDialogType dialog_type = EventDialogType::None;
     std::string new_event_name;
-    int next_event_id = 1;
     int editing_event_index = -1;
+    int next_event_id = 1;
     
     void LoadAllEvents() {
         auto& event_service = App::Instance().GetEventService();
         events = event_service.GetAllEvents();
-        is_filtered = false;
         current_page = 0;
         selected_row = 0;
         UpdateNextEventId();
     }
-    
+
     void UpdateNextEventId() {
-        next_event_id = 1;
-        for (const auto& e : events) {
-            if (e.id >= next_event_id) {
-                next_event_id = e.id + 1;
+        if (events.empty()) {
+            next_event_id = 1;
+        } else {
+            int max_id = 0;
+            for (const auto& event : events) {
+                if (event.id > max_id) {
+                    max_id = event.id;
+                }
             }
+            next_event_id = max_id + 1;
         }
     }
     
-    void SearchByName() {
+    bool SearchByName() {
         if (search_name.empty()) {
             LoadAllEvents();
-            return;
+            return true;
         }
         
         auto& event_service = App::Instance().GetEventService();
@@ -68,15 +62,11 @@ struct EventManageState {
         events.clear();
         if (event.has_value()) {
             events.push_back(*event);
+            current_page = 0;
+            selected_row = 0;
+            return true;
         }
-        
-        is_filtered = true;
-        current_page = 0;
-        selected_row = 0;
-        
-        if (events.empty()) {
-            DialogManager::Instance().ShowInfo("未找到该事项");
-        }
+        return false;
     }
     
     int GetTotalPages() const {
@@ -130,17 +120,10 @@ struct EventManageState {
         return nullptr;
     }
     
-    void OpenCreateDialog() {
-        new_event_name.clear();
-        UpdateNextEventId();
-        dialog_type = EventDialogType::Create;
-    }
-    
-    void OpenEditStatusDialog() {
+    void OpenEditDialog() {
         auto* event = GetSelectedEvent();
         if (event) {
             editing_event_index = current_page * page_size + selected_row;
-            dialog_type = EventDialogType::EditStatus;
         }
     }
     
@@ -151,16 +134,15 @@ struct EventManageState {
         
         auto& event_service = App::Instance().GetEventService();
         
-        // 检查名称是否已存在
         auto existing = event_service.QueryByName(new_event_name);
         if (existing.has_value()) {
             return false;
         }
         
         model::Event new_event;
-        new_event.id = 0;  // 自动分配
+        new_event.id = 0;
         new_event.name = new_event_name;
-        new_event.status = 1;  // 正常状态
+        new_event.status = model::EventStatus::Available;
         new_event.created_at = std::time(nullptr);
         
         auto result = event_service.CreateEvent(new_event);
@@ -186,12 +168,6 @@ struct EventManageState {
         return false;
     }
     
-    void CloseDialog() {
-        dialog_type = EventDialogType::None;
-        new_event_name.clear();
-        editing_event_index = -1;
-    }
-    
     std::string FormatTime(model::Timestamp ts) const {
         std::time_t time = static_cast<std::time_t>(ts);
         std::tm* tm = std::localtime(&time);
@@ -205,117 +181,286 @@ struct EventManageState {
     }
 };
 
+enum class EventDialogType {
+    None,
+    Create,
+    EditStatus,
+};
+
 ftxui::Component CreateEventManageScreen() {
     auto state = std::make_shared<EventManageState>();
     state->LoadAllEvents();
     
-    // 搜索组件
+    auto current_dialog = std::make_shared<EventDialogType>(EventDialogType::None);
+    auto tab_index = std::make_shared<int>(0);
+
+    // ==================== 搜索输入框 ====================
     auto search_input = Input(&state->search_name, "输入事项名称");
-    
-    auto search_btn = Button("查询", [state] {
-        state->SearchByName();
+
+    auto search_btn = Button("搜索", [state] {
+        if (state->SearchByName()) {
+            if (!state->search_name.empty()) {
+                DialogManager::Instance().ShowSuccess("找到 " + std::to_string(state->events.size()) + " 个事项");
+            }
+        } else {
+            DialogManager::Instance().ShowError("未找到该事项");
+        }
     });
-    
-    auto show_all_btn = Button("显示全部", [state] {
-        state->search_name.clear();
-        state->LoadAllEvents();
-    });
-    
-    auto create_btn = Button("新建事项", [state] {
-        state->OpenCreateDialog();
-    });
-    
-    // 翻页按钮
-    auto prev_btn = Button("◀ 上一页", [state] {
-        state->PrevPage();
-    });
-    
-    auto next_btn = Button("下一页 ▶", [state] {
-        state->NextPage();
-    });
-    
-    // 返回按钮
-    auto return_btn = Button("返回", [] {
-        Router::Instance().NavigateTo(Route::Home);
-    });
-    
-    // 新建弹窗组件
-    auto new_event_input = Input(&state->new_event_name, "事项名称");
-    
-    auto create_confirm_btn = Button("确认", [state] {
+
+    // ==================== 新建事项弹窗 ====================
+    auto new_event_input = Input(&state->new_event_name, "输入事项名称");
+
+    auto create_confirm_btn = Button("确认", [state, current_dialog] {
         if (state->new_event_name.empty()) {
             DialogManager::Instance().ShowError("请输入事项名称");
             return;
         }
         if (state->CreateEvent()) {
+            *current_dialog = EventDialogType::None;
+            state->new_event_name.clear();
             DialogManager::Instance().ShowSuccess("创建成功");
-            state->CloseDialog();
         } else {
             DialogManager::Instance().ShowError("创建失败，名称可能已存在");
         }
     });
-    
-    auto create_cancel_btn = Button("取消", [state] {
-        state->CloseDialog();
+
+    auto create_cancel_btn = Button("取消", [state, current_dialog] {
+        *current_dialog = EventDialogType::None;
+        state->new_event_name.clear();
     });
-    
-    // 状态修改弹窗组件
-    auto set_normal_btn = Button("设为正常", [state] {
-        if (state->SetEventStatus(model::EventStatus::Available)) {
-            DialogManager::Instance().ShowSuccess("状态已修改为正常");
-            state->CloseDialog();
-        } else {
-            DialogManager::Instance().ShowError("修改失败");
-        }
-    });
-    
-    auto set_frozen_btn = Button("设为冻结", [state] {
-        if (state->SetEventStatus(model::EventStatus::Frozen)) {
-            DialogManager::Instance().ShowSuccess("状态已修改为冻结");
-            state->CloseDialog();
-        } else {
-            DialogManager::Instance().ShowError("修改失败");
-        }
-    });
-    
-    auto status_cancel_btn = Button("取消", [state] {
-        state->CloseDialog();
-    });
-    
-    // 主容器
-    auto main_container = Container::Vertical({
-        Container::Horizontal({search_input, search_btn, show_all_btn, create_btn}),
-        Container::Horizontal({prev_btn, next_btn}),
-        return_btn,
-    });
-    
-    // 新建弹窗容器
+
     auto create_dialog_container = Container::Vertical({
         new_event_input,
         Container::Horizontal({create_confirm_btn, create_cancel_btn}),
     });
-    
-    // 状态修改弹窗容器
+
+    // ==================== 修改状态弹窗 ====================
+    auto set_normal_btn = Button("设为正常", [state, current_dialog] {
+        if (state->SetEventStatus(model::EventStatus::Available)) {
+            *current_dialog = EventDialogType::None;
+            DialogManager::Instance().ShowSuccess("状态已修改为正常");
+        } else {
+            DialogManager::Instance().ShowError("修改失败");
+        }
+    });
+
+    auto set_frozen_btn = Button("设为冻结", [state, current_dialog] {
+        if (state->SetEventStatus(model::EventStatus::Frozen)) {
+            *current_dialog = EventDialogType::None;
+            DialogManager::Instance().ShowSuccess("状态已修改为冻结");
+        } else {
+            DialogManager::Instance().ShowError("修改失败");
+        }
+    });
+
+    auto status_cancel_btn = Button("取消", [current_dialog] {
+        *current_dialog = EventDialogType::None;
+    });
+
     auto status_dialog_container = Container::Horizontal({
         set_normal_btn,
         set_frozen_btn,
         status_cancel_btn,
     });
-    
-    // Tab 切换
-    auto tab_index = std::make_shared<int>(0);
+
+    // ==================== 主页面按钮 ====================
+    auto create_btn = Button("新建事项", [state, current_dialog] {
+        state->new_event_name.clear();
+        *current_dialog = EventDialogType::Create;
+    });
+
+    auto edit_status_btn = Button("修改状态", [state, current_dialog] {
+        if (state->GetSelectedEvent()) {
+            state->OpenEditDialog();
+            *current_dialog = EventDialogType::EditStatus;
+        } else {
+            DialogManager::Instance().ShowError("请先选择事项");
+        }
+    });
+
+    auto return_btn = Button("返回", [] {
+        Router::Instance().NavigateTo(Route::Home);
+    });
+
+    // ==================== 主容器（使用 Horizontal 避免上下键切换按钮） ====================
+    auto main_container = Container::Horizontal({
+        search_input, 
+        search_btn, 
+        create_btn,
+        edit_status_btn,
+        return_btn,
+    });
+
+    // ==================== Tab 容器 ====================
     auto container = Container::Tab({
-        main_container,
-        create_dialog_container,
-        status_dialog_container,
+        main_container,           // 0: 主页面
+        create_dialog_container,  // 1: 新建弹窗
+        status_dialog_container,  // 2: 修改状态弹窗
     }, tab_index.get());
-    
-    // 键盘事件处理
-    container = CatchEvent(container, [state](Event event) {
-        if (state->dialog_type != EventDialogType::None) {
+
+    LayoutConfig config;
+    config.button_width = 12;
+    config.content_padding = 4;
+    config.outer_padding = 2;
+    config.content_height = 15;
+
+    const int COL_ID = 8;
+    const int COL_NAME = 16;
+    const int COL_STATUS = 10;
+    const int COL_TIME = 18;
+
+    return Renderer(container, [=]() {
+        switch (*current_dialog) {
+            case EventDialogType::None:       *tab_index = 0; break;
+            case EventDialogType::Create:     *tab_index = 1; break;
+            case EventDialogType::EditStatus: *tab_index = 2; break;
+        }
+        
+        auto user_info = RenderUserInfoBar();
+        
+        // ========== 搜索栏和操作按钮 ==========
+        auto search_row = hbox({
+            text("事项名称: ") | vcenter,
+            search_input->Render() | size(WIDTH, EQUAL, 20) | border,
+            text(" "),
+            search_btn->Render() | size(WIDTH, EQUAL, 10),
+            text(" "),
+            create_btn->Render() | size(WIDTH, EQUAL, 12),
+            text(" "),
+            edit_status_btn->Render() | size(WIDTH, EQUAL, 12),
+        }) | center;
+        
+        // ========== 构建表格 ==========
+        std::vector<std::vector<std::string>> table_data;
+        table_data.push_back({"编号", "事项名称", "状态", "创建时间"});
+        
+        auto page_events = state->GetCurrentPageEvents();
+        for (const auto& event : page_events) {
+            table_data.push_back({
+                std::to_string(event.id),
+                event.name,
+                state->GetStatusText(event.status),
+                state->FormatTime(event.created_at),
+            });
+        }
+        
+        while (table_data.size() < static_cast<size_t>(state->page_size + 1)) {
+            table_data.push_back({"", "", "", ""});
+        }
+        
+        auto table = Table(table_data);
+        
+        table.SelectAll().SeparatorVertical(LIGHT);
+        table.SelectAll().SeparatorHorizontal(LIGHT);
+        table.SelectAll().Border(LIGHT);
+        
+        table.SelectColumn(0).DecorateCells(size(WIDTH, EQUAL, COL_ID));
+        table.SelectColumn(1).DecorateCells(size(WIDTH, EQUAL, COL_NAME));
+        table.SelectColumn(2).DecorateCells(size(WIDTH, EQUAL, COL_STATUS));
+        table.SelectColumn(3).DecorateCells(size(WIDTH, EQUAL, COL_TIME));
+        
+        table.SelectAll().DecorateCells(center);
+        
+        table.SelectRow(0).Decorate(bold);
+        table.SelectRow(0).DecorateCells(bgcolor(Color::Yellow));
+        
+        if (state->selected_row >= 0 && state->selected_row < static_cast<int>(page_events.size())) {
+            table.SelectRow(state->selected_row + 1).DecorateCells(bgcolor(Color::GrayDark));
+        }
+        
+        auto table_element = table.Render();
+        
+        auto page_info = hbox({
+            text("第 " + std::to_string(state->current_page + 1) + 
+                 "/" + std::to_string(state->GetTotalPages()) + " 页"),
+            text("  "),
+            text("← → 翻页"),
+        }) | center;
+        
+        auto content_area = vbox({
+            search_row,
+            text(""),
+            table_element | center,
+        });
+        
+        auto button_area = hbox({
+            return_btn->Render() | size(WIDTH, EQUAL, config.button_width),
+            filler(),
+            page_info,
+        });
+        
+        auto main_page = CreatePageLayout(user_info, content_area, button_area, config);
+        
+        // ==================== 弹窗渲染 ====================
+        if (*current_dialog == EventDialogType::Create) {
+            auto dialog_box = vbox({
+                hbox({
+                    text("事项ID: "),
+                    text(std::to_string(state->next_event_id)) | bold | color(Color::Cyan) | vcenter,
+                }) | center,
+                text(""),
+                hbox({
+                    text("事项名称: ") | center,
+                    new_event_input->Render() | size(WIDTH, EQUAL, 20) | border,
+                }) | center,
+                hbox({
+                    filler(),
+                    create_confirm_btn->Render() | size(WIDTH, EQUAL, 10),
+                    text("  "),
+                    create_cancel_btn->Render() | size(WIDTH, EQUAL, 10),
+                    filler(),
+                }),
+            }) | border | clear_under | center;
+            
+            return dbox({
+                main_page | dim,
+                dialog_box,
+            });
+        }
+        
+        if (*current_dialog == EventDialogType::EditStatus) {
+            auto* event = state->GetSelectedEvent();
+            std::string event_name = event ? event->name : "";
+            std::string event_id = event ? std::to_string(event->id) : "";
+            std::string current_status = event ? state->GetStatusText(event->status) : "";
+            Color status_color = (event && event->status == model::EventStatus::Available) 
+                                 ? Color::Green : Color::Red;
+            
+            auto dialog_box = vbox({
+                hbox({
+                    text("事项: "),
+                    text(event_name),
+                }) | center,
+                text(""),
+                hbox({
+                    text("当前状态: ") | vcenter,
+                    text(current_status) | bold | color(status_color) | vcenter,
+                }) | center,
+                hbox({
+                    filler(),
+                    set_normal_btn->Render() | size(WIDTH, EQUAL, 12),
+                    text(" "),
+                    set_frozen_btn->Render() | size(WIDTH, EQUAL, 12),
+                    text(" "),
+                    status_cancel_btn->Render() | size(WIDTH, EQUAL, 10),
+                    filler(),
+                }),
+            }) | border | clear_under | center;
+            
+            return dbox({
+                main_page | dim,
+                dialog_box,
+            });
+        }
+        
+        return main_page;
+    }) | CatchEvent([state, current_dialog](Event event) {
+        // 弹窗打开时不处理
+        if (*current_dialog != EventDialogType::None) {
             return false;
         }
         
+        // 上下键选择表格行
         if (event == Event::ArrowUp) {
             state->SelectPrevRow();
             return true;
@@ -324,6 +469,8 @@ ftxui::Component CreateEventManageScreen() {
             state->SelectNextRow();
             return true;
         }
+        
+        // 左右键翻页
         if (event == Event::ArrowLeft) {
             state->PrevPage();
             return true;
@@ -332,204 +479,7 @@ ftxui::Component CreateEventManageScreen() {
             state->NextPage();
             return true;
         }
-        if (event == Event::Return) {
-            if (state->GetSelectedEvent()) {
-                state->OpenEditStatusDialog();
-                return true;
-            }
-        }
+        
         return false;
-    });
-
-    return Renderer(container, [=] {
-        // 设置 tab 索引
-        switch (state->dialog_type) {
-            case EventDialogType::None: *tab_index = 0; break;
-            case EventDialogType::Create: *tab_index = 1; break;
-            case EventDialogType::EditStatus: *tab_index = 2; break;
-        }
-        
-        // 新建事项弹窗
-        if (state->dialog_type == EventDialogType::Create) {
-            return vbox({
-                filler(),
-                hbox({
-                    filler(),
-                    vbox({
-                        text("新建事项") | bold | center,
-                        separator(),
-                        text(""),
-                        hbox({
-                            text("事项编号: "),
-                            text(std::to_string(state->next_event_id)) | bold,
-                        }) | center,
-                        text(""),
-                        hbox({
-                            text("事项名称: "),
-                            new_event_input->Render() | size(WIDTH, EQUAL, 20) | border,
-                        }) | center,
-                        text(""),
-                        separator(),
-                        hbox({
-                            filler(),
-                            create_confirm_btn->Render() | size(WIDTH, EQUAL, 10),
-                            text("  "),
-                            create_cancel_btn->Render() | size(WIDTH, EQUAL, 10),
-                            filler(),
-                        }),
-                    }) | border | size(WIDTH, EQUAL, 40),
-                    filler(),
-                }),
-                filler(),
-            }) | border;
-        }
-        
-        // 状态修改弹窗
-        if (state->dialog_type == EventDialogType::EditStatus) {
-            auto* event = (state->editing_event_index >= 0 && 
-                          state->editing_event_index < static_cast<int>(state->events.size())) 
-                          ? &state->events[state->editing_event_index] : nullptr;
-            
-            std::string event_info = event ? 
-                ("事项: " + event->name + " (ID: " + std::to_string(event->id) + ")") : "未知事项";
-            std::string current_status = event ? 
-                ("当前状态: " + state->GetStatusText(event->status)) : "";
-            
-            return vbox({
-                filler(),
-                hbox({
-                    filler(),
-                    vbox({
-                        text("修改事项状态") | bold | center,
-                        separator(),
-                        text(""),
-                        text(event_info) | center,
-                        text(current_status) | center | dim,
-                        text(""),
-                        separator(),
-                        hbox({
-                            filler(),
-                            set_normal_btn->Render() | size(WIDTH, EQUAL, 12),
-                            text(" "),
-                            set_frozen_btn->Render() | size(WIDTH, EQUAL, 12),
-                            text(" "),
-                            status_cancel_btn->Render() | size(WIDTH, EQUAL, 10),
-                            filler(),
-                        }),
-                    }) | border | size(WIDTH, EQUAL, 45),
-                    filler(),
-                }),
-                filler(),
-            }) | border;
-        }
-        
-        // 主页面
-        auto title = text("事项管理") | bold | center;
-        auto user_info = RenderUserInfoBar(PageType::Home);
-        
-        Element filter_status;
-        if (state->is_filtered) {
-            filter_status = hbox({
-                text("查询: ") | bold,
-                text(state->search_name) | color(Color::Green),
-                text("  找到 " + std::to_string(state->events.size()) + " 条记录"),
-            }) | center;
-        } else {
-            filter_status = text("显示全部事项，共 " + std::to_string(state->events.size()) + " 条记录") | center | dim;
-        }
-        
-        auto search_area = hbox({
-            text("事项名称: ") | center,
-            search_input->Render() | size(WIDTH, EQUAL, 15) | border,
-            text(" "),
-            search_btn->Render() | size(WIDTH, EQUAL, 8),
-            text(" "),
-            show_all_btn->Render() | size(WIDTH, EQUAL, 10),
-            text(" "),
-            create_btn->Render() | size(WIDTH, EQUAL, 10),
-        }) | center;
-        
-        // 构建表格
-        std::vector<std::vector<std::string>> table_data;
-        table_data.push_back({"", "编号", "事项名称", "创建时间", "状态"});
-        
-        auto current_events = state->GetCurrentPageEvents();
-        for (int i = 0; i < static_cast<int>(current_events.size()); i++) {
-            const auto& event = current_events[i];
-            std::string selector = (i == state->selected_row) ? ">" : " ";
-            table_data.push_back({
-                selector,
-                std::to_string(event.id),
-                event.name,
-                state->FormatTime(event.created_at),
-                state->GetStatusText(event.status)
-            });
-        }
-        
-        if (current_events.empty()) {
-            table_data.push_back({"", "", "暂无事项数据", "", ""});
-        }
-        
-        auto table = Table(table_data);
-        table.SelectAll().Border(LIGHT);
-        table.SelectRow(0).Decorate(bold);
-        table.SelectColumn(0).DecorateCells(size(WIDTH, EQUAL, 3));
-        table.SelectColumn(1).DecorateCells(size(WIDTH, EQUAL, 8));
-        table.SelectColumn(2).DecorateCells(size(WIDTH, EQUAL, 15));
-        table.SelectColumn(3).DecorateCells(size(WIDTH, EQUAL, 18));
-        table.SelectColumn(4).DecorateCells(size(WIDTH, EQUAL, 8));
-        table.SelectAll().DecorateCells(center);
-        
-        // 高亮选中行
-        if (state->selected_row >= 0 && state->selected_row < static_cast<int>(current_events.size())) {
-            table.SelectRow(state->selected_row + 1).Decorate(bgcolor(Color::Blue));
-        }
-        
-        auto table_element = table.Render();
-        
-        auto page_info = text("第 " + std::to_string(state->current_page + 1) + 
-                              " / " + std::to_string(state->GetTotalPages()) + " 页  " +
-                              "(↑↓选择, ←→翻页, Enter修改状态)") | center;
-        
-        auto page_buttons = hbox({
-            filler(),
-            prev_btn->Render() | size(WIDTH, EQUAL, 12),
-            text("  "),
-            next_btn->Render() | size(WIDTH, EQUAL, 12),
-            filler(),
-        });
-        
-        auto bottom_buttons = hbox({
-            filler(),
-            return_btn->Render() | size(WIDTH, EQUAL, 10),
-            filler(),
-        });
-        
-        auto content = vbox({
-            title,
-            user_info,
-            separator(),
-            text(""),
-            search_area,
-            filter_status,
-            text(""),
-            table_element | center,
-            text(""),
-            page_info,
-            page_buttons,
-            text(""),
-            separator(),
-            bottom_buttons,
-        });
-        
-        return vbox({
-            filler() | size(HEIGHT, EQUAL, 1),
-            hbox({
-                filler() | size(WIDTH, EQUAL, 2),
-                content | flex,
-                filler() | size(WIDTH, EQUAL, 2),
-            }),
-            filler() | size(HEIGHT, EQUAL, 1),
-        }) | border;
     });
 }
