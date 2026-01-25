@@ -3,6 +3,7 @@
 #include "Router.h"
 #include "Session.h"
 #include "UserInfoBar.h"
+#include "PageLayout.h"
 #include "Dialog.h"
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/event.hpp>
@@ -28,7 +29,9 @@ struct BillStatsState {
     std::vector<UserStats> user_stats;
     double max_amount = 0.0;
     
-    // 时间筛选
+    int current_page = 0;
+    int page_size = 3;
+    
     std::string start_year;
     std::string start_month;
     std::string start_day;
@@ -45,6 +48,7 @@ struct BillStatsState {
         CalculateStats(all_bills);
         is_filtered = false;
         filter_desc.clear();
+        current_page = 0;
     }
     
     void LoadStatsByTimeRange() {
@@ -66,9 +70,6 @@ struct BillStatsState {
             start_tm.tm_year = sy - 1900;
             start_tm.tm_mon = sm - 1;
             start_tm.tm_mday = sd;
-            start_tm.tm_hour = 0;
-            start_tm.tm_min = 0;
-            start_tm.tm_sec = 0;
             std::time_t start_time = std::mktime(&start_tm);
             
             std::tm end_tm = {};
@@ -93,9 +94,12 @@ struct BillStatsState {
             is_filtered = true;
             filter_desc = start_year + "-" + start_month + "-" + start_day + 
                          " 至 " + end_year + "-" + end_month + "-" + end_day;
+            current_page = 0;
             
             if (bills.empty()) {
                 DialogManager::Instance().ShowInfo("该时间段内无账单记录");
+            } else {
+                DialogManager::Instance().ShowSuccess("统计完成，共 " + std::to_string(user_stats.size()) + " 位用户");
             }
         } catch (...) {
             DialogManager::Instance().ShowError("日期格式错误");
@@ -146,6 +150,34 @@ struct BillStatsState {
         LoadAllStats();
     }
     
+    int GetTotalPages() const {
+        if (user_stats.empty()) return 1;
+        return (user_stats.size() + page_size - 1) / page_size;
+    }
+    
+    std::vector<UserStats> GetCurrentPageStats() const {
+        std::vector<UserStats> result;
+        int start = current_page * page_size;
+        int end = std::min(start + page_size, static_cast<int>(user_stats.size()));
+        
+        for (int i = start; i < end; i++) {
+            result.push_back(user_stats[i]);
+        }
+        return result;
+    }
+    
+    void NextPage() {
+        if (current_page < GetTotalPages() - 1) {
+            current_page++;
+        }
+    }
+    
+    void PrevPage() {
+        if (current_page > 0) {
+            current_page--;
+        }
+    }
+    
     std::string FormatAmount(double amount) const {
         std::ostringstream oss;
         oss << std::fixed << std::setprecision(2) << amount;
@@ -168,7 +200,7 @@ ftxui::Component CreateBillStatsScreen() {
         state->LoadStatsByTimeRange();
     });
     
-    auto clear_btn = Button("清除", [state] {
+    auto clear_btn = Button("清除筛选", [state] {
         state->ClearFilter();
     });
     
@@ -176,37 +208,37 @@ ftxui::Component CreateBillStatsScreen() {
         Router::Instance().NavigateTo(Route::BillManage);
     });
     
-    auto container = Container::Vertical({
-        Container::Horizontal({
-            start_year_input, start_month_input, start_day_input,
-            end_year_input, end_month_input, end_day_input,
-        }),
-        Container::Horizontal({filter_btn, clear_btn, return_btn}),
+    auto container = Container::Horizontal({
+        start_year_input, start_month_input, start_day_input,
+        end_year_input, end_month_input, end_day_input,
+        filter_btn, clear_btn, return_btn,
     });
 
+    LayoutConfig config;
+    config.button_width = 10;
+    config.content_padding = 4;
+    config.outer_padding = 2;
+    config.content_height = 12;
+
+    const int BAR_MAX_WIDTH = 30;
+
     return Renderer(container, [=] {
-        auto title = text("账单统计") | bold | center;
-        auto user_info = RenderUserInfoBar(PageType::Home);
+        auto user_info = RenderUserInfoBar();
         
-        Element filter_status;
-        if (state->is_filtered) {
-            filter_status = hbox({
-                text("筛选: ") | bold,
-                text(state->filter_desc) | color(Color::Green),
-            }) | center;
-        } else {
-            filter_status = text("显示全部账单统计") | center | dim;
-        }
-        
-        // 柱形图区域
+        // ========== 柱形图区域 ==========
         const int BAR_MAX_WIDTH = 40;
         
         Elements chart_rows;
+
+        auto current_stats = state->GetCurrentPageStats();
         
         if (state->user_stats.empty()) {
             chart_rows.push_back(text("暂无统计数据") | center | dim);
         } else {
-            for (const auto& stats : state->user_stats) {
+
+            for (size_t i = 0; i < current_stats.size(); i++) {
+                const auto& stats = current_stats[i];
+                
                 int bar_width = static_cast<int>((stats.total_amount / state->max_amount) * BAR_MAX_WIDTH);
                 bar_width = std::max(1, std::min(bar_width, BAR_MAX_WIDTH));
                 
@@ -227,7 +259,15 @@ ftxui::Component CreateBillStatsScreen() {
         
         auto chart = vbox(chart_rows);
         
-        // 时间筛选区域
+        // ========== 分页信息 ==========
+        auto page_info = hbox({
+            text("第 " + std::to_string(state->current_page + 1) + 
+                 "/" + std::to_string(state->GetTotalPages()) + " 页") | center,
+            filler() | size(WIDTH, EQUAL, 20),
+            text("← → 翻页"),
+        }) | center;
+        
+        // ========== 时间筛选区域 ==========
         auto time_filter = hbox({
             text("开始: ") | vcenter,
             start_year_input->Render() | size(WIDTH, EQUAL, 6) | border,
@@ -244,38 +284,36 @@ ftxui::Component CreateBillStatsScreen() {
             end_day_input->Render() | size(WIDTH, EQUAL, 4) | border,
         }) | center;
         
-        auto bottom_buttons = hbox({
-            filler(),
-            filter_btn->Render() | size(WIDTH, EQUAL, 10),
-            text("  "),
-            clear_btn->Render() | size(WIDTH, EQUAL, 10),
-            text("  "),
-            return_btn->Render() | size(WIDTH, EQUAL, 10),
-            filler(),
-        });
-        
-        auto content = vbox({
-            title,
-            user_info,
-            separator(),
-            text(""),
-            filter_status,
-            text(""),
-            chart | center,
-            text(""),
-            time_filter,
-            text(""),
-            bottom_buttons,
-        });
-        
-        return vbox({
-            filler() | size(HEIGHT, EQUAL, 1),
+        // ========== 内容区域 ==========
+        auto content_area = vbox({
             hbox({
-                filler() | size(WIDTH, EQUAL, 2),
-                content | flex,
-                filler() | size(WIDTH, EQUAL, 2),
+                filler() | size(WIDTH, EQUAL, 60),
+                return_btn->Render() | size(WIDTH, EQUAL, 10),
             }),
-            filler() | size(HEIGHT, EQUAL, 1),
-        }) | border;
+            text(""),
+            chart,
+            text(""),
+            page_info,
+            text(""),
+        });
+        
+        // ========== 底部按钮 ==========
+        auto button_area = hbox({
+            time_filter,
+            filler() ,
+            filter_btn->Render() | size(WIDTH, EQUAL, 10),
+        });
+        
+        return CreatePageLayout(user_info, content_area, button_area, config);
+    }) | CatchEvent([state](Event event) {
+        if (event == Event::ArrowLeft) {
+            state->PrevPage();
+            return true;
+        }
+        if (event == Event::ArrowRight) {
+            state->NextPage();
+            return true;
+        }
+        return false;
     });
 }
